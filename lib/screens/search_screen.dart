@@ -56,9 +56,49 @@ class _SearchScreenState extends State<SearchScreen> {
       appBar: AppBar(
         title: const Text('🔍 Search'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.home),
-            onPressed: () => Navigator.pop(context),
+          PopupMenuButton<String>(
+            onSelected: (route) async {
+              if (route == AppRoutes.dashboard) {
+                Navigator.pushNamed(context, AppRoutes.dashboard);
+              } else if (route == 'home') {
+                Navigator.pop(context);
+              } else if (route == 'logout') {
+                await context.read<AuthProvider>().logout();
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundImage: auth.user?.photoURL != null
+                    ? NetworkImage(auth.user!.photoURL!)
+                    : null,
+                backgroundColor: Colors.blueGrey,
+                child: auth.user?.photoURL == null
+                    ? Text(
+                        (auth.user?.email ?? 'U')[0].toUpperCase(),
+                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                      )
+                    : null,
+              ),
+            ),
+            itemBuilder: (_) => [
+              PopupMenuItem<String>(
+                enabled: false,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(auth.user?.displayName ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text(auth.user?.email ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(value: 'home', child: Text('🏠 Home (Survey)')),
+              const PopupMenuItem(value: AppRoutes.dashboard, child: Text('📊 Dashboard')),
+              const PopupMenuDivider(),
+              const PopupMenuItem(value: 'logout', child: Text('🚪 Sign out', style: TextStyle(color: Colors.red))),
+            ],
           ),
         ],
       ),
