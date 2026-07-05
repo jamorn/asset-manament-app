@@ -1,0 +1,308 @@
+// lib/screens/survey_screen.dart
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/asset_model.dart';
+import '../providers/auth_provider.dart';
+import '../providers/asset_provider.dart';
+import '../providers/temp_photo_provider.dart';
+import '../providers/audit_provider.dart';
+import '../services/rbac_service.dart';
+import '../configs/routes.dart';
+import '../widgets/cost_center_selector.dart';
+import '../widgets/asset_class_picker.dart';
+import '../widgets/asset_search_bar.dart';
+import '../widgets/load_more_list.dart';
+import '../widgets/audit_form.dart';
+import '../widgets/temp_photo_panel.dart';
+
+class SurveyScreen extends StatefulWidget {
+  const SurveyScreen({super.key});
+
+  @override
+  State<SurveyScreen> createState() => _SurveyScreenState();
+}
+
+class _SurveyScreenState extends State<SurveyScreen> {
+  AssetModel? _selectedAsset;
+  String _searchQuery = '';
+  String? _selectedCostCenter;
+  String? _selectedAssetClass;
+  bool _showUnauditedOnly = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final assetProv = context.watch<AssetProvider>();
+    final auditProv = context.watch<AuditProvider>();
+
+    if (auth.isAppLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (auth.user == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Asset Survey')),
+        body: Center(
+          child: Card(
+            margin: const EdgeInsets.all(24),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('กรุณาเข้าสู่ระบบ',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  const Text('ระบบจำเป็นต้องยืนยันตัวตนผ่านบัญชี Google'),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => auth.login(),
+                    icon: const Icon(Icons.login),
+                    label: const Text('Sign in with Google'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (!auth.authorized) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Asset Survey')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('ไม่มีสิทธิ์เข้าใช้งาน',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('บัญชี ${auth.user!.email} ไม่อยู่ในรายชื่อผู้มีสิทธิ์'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => auth.logout(),
+                child: const Text('ออกจากระบบ'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final allowedCostCenters = AppRoutes.getAllowedCostCenters(
+      screenName: AppRoutes.survey,
+      role: auth.role,
+      userCostCenters: auth.allowedCostCenters,
+    );
+
+    final availableCostCenters = RbacService.getAvailableCostCenters(
+      assetProv.assets,
+      RBACContext(
+        role: auth.role,
+        allowedCostCenters: allowedCostCenters,
+      ),
+    );
+
+    if (_selectedCostCenter == null && allowedCostCenters is List && allowedCostCenters!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() => _selectedCostCenter = allowedCostCenters![0]);
+      });
+    }
+
+    final visibleAssets = RbacService.filterAssets(
+      assetProv.assets,
+      RBACContext(
+        role: auth.role,
+        allowedCostCenters: allowedCostCenters,
+      ),
+    );
+
+    var filteredAssets = visibleAssets;
+    if (_selectedCostCenter != null) {
+      filteredAssets = filteredAssets.where((a) => a.costCenter == _selectedCostCenter).toList();
+    }
+    if (_selectedAssetClass != null) {
+      filteredAssets = filteredAssets.where((a) => a.assetClass == _selectedAssetClass).toList();
+    }
+    if (_showUnauditedOnly) {
+      filteredAssets = filteredAssets.where((a) => !assetProv.auditedAssetNos.contains(a.assetNo)).toList();
+    }
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toUpperCase();
+      filteredAssets = filteredAssets.where((a) =>
+        a.assetNo.toUpperCase().contains(q) ||
+        a.description.toUpperCase().contains(q) ||
+        a.lastLocationName.toUpperCase().contains(q)
+      ).toList();
+    }
+
+    final poolForClasses = _selectedCostCenter != null
+        ? visibleAssets.where((a) => a.costCenter == _selectedCostCenter).toList()
+        : visibleAssets;
+    final classMap = <String, AssetClassInfo>{};
+    for (final a in poolForClasses) {
+      classMap.putIfAbsent(a.assetClass, () => AssetClassInfo(
+        assetClass: a.assetClass,
+        assetClassName: a.assetClassName,
+        count: 0,
+      )).count++;
+    }
+    final availableAssetClasses = classMap.values.toList()
+      ..sort((a, b) => a.assetClass.compareTo(b.assetClass));
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Asset Survey ${DateTime.now().year}'),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (route) {
+              if (route == AppRoutes.dashboard) {
+                Navigator.pushNamed(context, AppRoutes.dashboard);
+              } else if (route == AppRoutes.search) {
+                Navigator.pushNamed(context, AppRoutes.search);
+              }
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(value: AppRoutes.dashboard, child: Text('Dashboard')),
+              const PopupMenuItem(value: AppRoutes.search, child: Text('Search')),
+            ],
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            LinearProgressIndicator(
+              value: assetProv.totalCount > 0
+                  ? assetProv.auditedCount / assetProv.totalCount
+                  : 0,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${assetProv.auditedCount}/${assetProv.totalCount} สำรวจแล้ว',
+              style: const TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+
+            CostCenterSelector(
+              costCenters: availableCostCenters,
+              selectedCostCenter: _selectedCostCenter,
+              onSelect: (cc) => setState(() {
+                _selectedCostCenter = cc;
+                _selectedAssetClass = null;
+              }),
+              auditedCounts: _buildAuditedCounts(visibleAssets, assetProv.auditedAssetNos),
+              hideAll: allowedCostCenters is List,
+            ),
+            const SizedBox(height: 12),
+
+            if (_selectedCostCenter != null)
+              AssetClassPicker(
+                classes: availableAssetClasses,
+                selectedClass: _selectedAssetClass,
+                onSelect: (ac) => setState(() => _selectedAssetClass = ac),
+                auditedCounts: _buildAuditedCounts(poolForClasses, assetProv.auditedAssetNos),
+              ),
+            if (_selectedCostCenter != null) const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Switch(
+                  value: _showUnauditedOnly,
+                  onChanged: (v) => setState(() => _showUnauditedOnly = v),
+                ),
+                Text(_showUnauditedOnly ? 'เหลือยังไม่ตรวจ' : 'ทั้งหมด'),
+                const Spacer(),
+                Text('${filteredAssets.length} รายการ', style: const TextStyle(fontSize: 11)),
+              ],
+            ),
+
+            AssetSearchBar(
+              value: _searchQuery,
+              onChanged: (v) => setState(() => _searchQuery = v),
+            ),
+
+            LoadMoreList(
+              assets: filteredAssets,
+              selectedAssetNo: _selectedAsset?.assetNo,
+              onSelect: (asset) => setState(() => _selectedAsset = asset),
+              onImageClick: (url) => _showImageModal(url),
+              auditedSet: assetProv.auditedAssetNos,
+              pageSize: 50,
+            ),
+
+            if (_selectedAsset != null) ...[
+              const Divider(height: 24),
+              const Text('Audit Form',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              AuditForm(
+                selectedAsset: _selectedAsset,
+                isSubmitting: auditProv.submitStatus == SubmitStatus.submitting,
+                onSubmit: (data) => _handleAuditSubmit(
+                  context, assetProv, auditProv, data),
+              ),
+            ],
+
+            const Divider(height: 32),
+            const TempPhotoPanel(),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Map<String, int> _buildAuditedCounts(List<AssetModel> assets, Set<String> auditedSet) {
+    final map = <String, int>{};
+    for (final a in assets) {
+      if (auditedSet.contains(a.assetNo)) {
+        map[a.costCenter] = (map[a.costCenter] ?? 0) + 1;
+      }
+    }
+    return map;
+  }
+
+  void _showImageModal(String url) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        child: url != null && url.isNotEmpty
+            ? Image.network(url, fit: BoxFit.contain)
+            : const Center(child: Text('No image')),
+      ),
+    );
+  }
+
+  Future<void> _handleAuditSubmit(
+    BuildContext context,
+    AssetProvider assetProv,
+    AuditProvider auditProv,
+    Map<String, dynamic> data,
+  ) async {
+    final location = data['location'] as String;
+    final condition = data['condition'] as String;
+    final imageFile = data['imageFile'] as File;
+    final asset = _selectedAsset!;
+    final ok = await auditProv.submitAudit(
+      asset: asset,
+      location: location,
+      condition: condition,
+      imageFile: imageFile,
+      auditYear: DateTime.now().year.toString(),
+      auditorEmail: context.read<AuthProvider>().user?.email ?? 'unknown',
+    );
+    if (ok && mounted) {
+      assetProv.markAsAudited(asset.assetNo);
+      setState(() => _selectedAsset = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${asset.assetNo} — บันทึกสำเร็จ!')),
+      );
+    }
+  }
+}
