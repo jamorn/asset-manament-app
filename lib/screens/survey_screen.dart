@@ -304,11 +304,11 @@ class _SurveyScreenState extends State<SurveyScreen> {
     return map;
   }
 
-  void _showImageModal(String url) {
+    void _showImageModal(String url) {
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        child: url != null && url.isNotEmpty
+        child: url.isNotEmpty
             ? Image.network(url, fit: BoxFit.contain)
             : const Center(child: Text('No image')),
       ),
