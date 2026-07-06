@@ -30,6 +30,11 @@ class _AuditFormState extends State<AuditForm> {
   File? _pickedImage;
   List<String> _savedLocations = [];
 
+  // 🆕 Environment / Mobility / Remarks state
+  String _environment = '';
+  String _mobility = '';
+  String _remarks = '';
+
   final ImagePicker _picker = ImagePicker();
   static const String _locationsKey = 'assetapp_locations';
 
@@ -37,12 +42,17 @@ class _AuditFormState extends State<AuditForm> {
   void initState() {
     super.initState();
     _loadSavedLocations();
-    // ดึงค่าตำแหน่งเริ่มต้นของครุภัณฑ์มาใส่ในฟอร์มรอไว้ล่วงหน้าเพื่อความรวดเร็ว
-    if (widget.selectedAsset != null) {
-      _locationController.text = widget.selectedAsset!.lastLocationName.isNotEmpty
-          ? widget.selectedAsset!.lastLocationName
-          : widget.selectedAsset!.mainLocation;
-    }
+    _initFormFromAsset(widget.selectedAsset);
+  }
+
+  void _initFormFromAsset(AssetModel? asset) {
+    if (asset == null) return;
+    _locationController.text = asset.lastLocationName.isNotEmpty
+        ? asset.lastLocationName
+        : asset.mainLocation;
+    _environment = asset.environment;
+    _mobility = asset.mobility;
+    _remarks = asset.remarks ?? '';
   }
 
   @override
@@ -55,6 +65,7 @@ class _AuditFormState extends State<AuditForm> {
         _selectedCondition = '';
         _customCondition = '';
         _pickedImage = null;
+        _initFormFromAsset(widget.selectedAsset);
       });
     }
   }
@@ -127,11 +138,14 @@ class _AuditFormState extends State<AuditForm> {
     // เซฟลง Cache เพื่อเก็บเป็น Autocomplete ครั้งถัดไป
     _saveLocationToCache(location);
 
-    // ส่งชุดข้อมูลกลับขึ้นไปจัดเตรียมการ Write ลง Firestore
+        // ส่งชุดข้อมูลกลับขึ้นไปจัดเตรียมการ Write ลง Firestore
     widget.onSubmit({
       'location': location,
       'condition': finalCondition,
       'imageFile': _pickedImage,
+      'environment': _environment,
+      'mobility': _mobility,
+      'remarks': _remarks,
     });
   }
 
@@ -151,14 +165,110 @@ class _AuditFormState extends State<AuditForm> {
       );
     }
 
-    final asset = widget.selectedAsset!;
+        final asset = widget.selectedAsset!;
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 🆕 Asset Info Card — แสดง assetNo + description + costCenter ให้ user เห็น
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('ASSET NUMBER',
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(asset.assetNo,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'monospace')),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text('· ${asset.description}',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text('🏢 ${asset.costCenter} — ${asset.costCenterName}',
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade700)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // 🆕 Environment & Mobility (Grid 2 คอลัมน์)
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('ENVIRONMENT',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber)),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                      value: _environment.isEmpty ? null : _environment,
+                      items: const [
+                        DropdownMenuItem(value: '', child: Text('— Set Environment —')),
+                        DropdownMenuItem(value: 'outdoor', child: Text('Outdoor')),
+                        DropdownMenuItem(value: 'indoor', child: Text('Indoor')),
+                      ],
+                      onChanged: (val) => setState(() => _environment = val ?? ''),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        filled: true,
+                        fillColor: Theme.of(context).cardColor,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('MOBILITY',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.teal)),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                      value: _mobility.isEmpty ? null : _mobility,
+                      items: const [
+                        DropdownMenuItem(value: '', child: Text('— Set Mobility —')),
+                        DropdownMenuItem(value: 'fixed', child: Text('Fixed')),
+                        DropdownMenuItem(value: 'portable', child: Text('Portable')),
+                      ],
+                      onChanged: (val) => setState(() => _mobility = val ?? ''),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        filled: true,
+                        fillColor: Theme.of(context).cardColor,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
           // 📍 ส่วนระบุสถานที่จัดวางครุภัณฑ์
-          const Text('LOCATION NAME', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+          const Text('CURRENT LOCATION', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
           const SizedBox(height: 6),
           RawAutocomplete<String>(
             textEditingController: _locationController,
@@ -212,12 +322,35 @@ class _AuditFormState extends State<AuditForm> {
           ),
           const SizedBox(height: 16),
 
-          // 🔧 ส่วนเลือกสถานะสภาพครุภัณฑ์ (ดึง Custom Widget ข้อ 1 มาประยุกต์)
+                    // 🔧 ส่วนเลือกสถานะสภาพครุภัณฑ์ (ดึง Custom Widget ข้อ 1 มาประยุกต์)
           ConditionSelect(
             value: _selectedCondition,
             customValue: _customCondition,
             onChange: (val) => setState(() => _selectedCondition = val),
             onCustomChange: (val) => setState(() => _customCondition = val),
+          ),
+          const SizedBox(height: 16),
+
+          // 🆕 REMARK / NOTE
+          const Text('REMARK / NOTE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+          const SizedBox(height: 6),
+          TextField(
+            controller: TextEditingController.fromValue(
+              TextEditingValue(
+                text: _remarks,
+                selection: TextSelection.collapsed(offset: _remarks.length),
+              ),
+            ),
+            onChanged: (val) => setState(() => _remarks = val),
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'หมายเหตุเพิ่มเติม (ถ้ามี)...',
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              filled: true,
+              fillColor: Theme.of(context).cardColor,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            style: const TextStyle(fontSize: 13),
           ),
           const SizedBox(height: 16),
 

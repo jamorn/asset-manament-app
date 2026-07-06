@@ -40,15 +40,18 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
     );
 
-    var filteredAssets = visibleAssets;
+        var filteredAssets = visibleAssets;
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toUpperCase();
       filteredAssets = visibleAssets.where((a) =>
         a.assetNo.toUpperCase().contains(q) ||
         a.description.toUpperCase().contains(q) ||
         a.lastLocationName.toUpperCase().contains(q) ||
+        a.mainLocation.toUpperCase().contains(q) ||
         a.costCenter.toUpperCase().contains(q) ||
-        a.costCenterName.toUpperCase().contains(q)
+        a.costCenterName.toUpperCase().contains(q) ||
+        a.assetOwner.toUpperCase().contains(q) ||
+        (a.remarks?.toUpperCase() ?? '').contains(q)
       ).toList();
     }
 

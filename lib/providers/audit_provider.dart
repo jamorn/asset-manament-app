@@ -15,13 +15,17 @@ class AuditProvider with ChangeNotifier {
   SubmitStatus get submitStatus => _submitStatus;
   String? get submitError => _submitError;
 
-  Future<bool> submitAudit({
+    Future<bool> submitAudit({
     required AssetModel asset,
     required String location,
     required String condition,
     required File imageFile,
     required String auditYear,
     required String auditorEmail,
+    // 🆕 รับค่า environment, mobility, remarks เพิ่ม
+    String? environment,
+    String? mobility,
+    String? remarks,
   }) async {
     _submitStatus = SubmitStatus.submitting;
     _submitError = null;
@@ -49,16 +53,28 @@ class AuditProvider with ChangeNotifier {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      await _db
-          .collection('artifacts/irpc-asset-audit/public/data/assets')
-          .doc(asset.assetNo)
-          .update({
+      // 🆕 เตรียม update data — ส่ง environment, mobility, remarks ถ้ามีค่า
+      final Map<String, dynamic> updateData = {
         'lastLocationName': location,
         'lastCondition': condition,
         'lastImageUrl': imageUrl,
         'updatedAt': FieldValue.serverTimestamp(),
         'updatedBy': auditorEmail,
-      });
+      };
+      if (environment != null && environment.isNotEmpty) {
+        updateData['environment'] = environment;
+      }
+      if (mobility != null && mobility.isNotEmpty) {
+        updateData['mobility'] = mobility;
+      }
+      if (remarks != null && remarks.isNotEmpty) {
+        updateData['remarks'] = remarks;
+      }
+
+      await _db
+          .collection('artifacts/irpc-asset-audit/public/data/assets')
+          .doc(asset.assetNo)
+          .update(updateData);
 
       _submitStatus = SubmitStatus.success;
       return true;

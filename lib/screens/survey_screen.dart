@@ -130,12 +130,17 @@ class _SurveyScreenState extends State<SurveyScreen> {
     if (_showUnauditedOnly) {
       filteredAssets = filteredAssets.where((a) => !assetProv.auditedAssetNos.contains(a.assetNo)).toList();
     }
-    if (_searchQuery.isNotEmpty) {
+        if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toUpperCase();
       filteredAssets = filteredAssets.where((a) =>
         a.assetNo.toUpperCase().contains(q) ||
         a.description.toUpperCase().contains(q) ||
-        a.lastLocationName.toUpperCase().contains(q)
+        a.lastLocationName.toUpperCase().contains(q) ||
+        a.mainLocation.toUpperCase().contains(q) ||
+        a.costCenter.toUpperCase().contains(q) ||
+        a.costCenterName.toUpperCase().contains(q) ||
+        a.assetOwner.toUpperCase().contains(q) ||
+        (a.remarks?.toUpperCase() ?? '').contains(q)
       ).toList();
     }
 
@@ -310,7 +315,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
     );
   }
 
-  Future<void> _handleAuditSubmit(
+    Future<void> _handleAuditSubmit(
     BuildContext context,
     AssetProvider assetProv,
     AuditProvider auditProv,
@@ -320,6 +325,12 @@ class _SurveyScreenState extends State<SurveyScreen> {
     final condition = data['condition'] as String;
     final imageFile = data['imageFile'] as File;
     final asset = _selectedAsset!;
+
+    // 🆕 ดึง environment, mobility, remarks จาก form data
+    final environment = data['environment'] as String?;
+    final mobility = data['mobility'] as String?;
+    final remarks = data['remarks'] as String?;
+
     final ok = await auditProv.submitAudit(
       asset: asset,
       location: location,
@@ -327,6 +338,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
       imageFile: imageFile,
       auditYear: DateTime.now().year.toString(),
       auditorEmail: context.read<AuthProvider>().user?.email ?? 'unknown',
+      environment: environment,
+      mobility: mobility,
+      remarks: remarks,
     );
     if (ok && mounted) {
       assetProv.markAsAudited(asset.assetNo);
