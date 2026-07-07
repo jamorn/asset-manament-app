@@ -184,7 +184,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     );
                   },
                   child: CircleAvatar(
-                    backgroundColor: Colors.white.withValues(alpha: 0.25),
+                    backgroundColor: Colors.red,
                     child: IconButton(
                       icon: const Icon(Icons.close, color: Colors.white, size: 24),
                       onPressed: () => Navigator.of(context).pop(),

@@ -48,10 +48,10 @@ class CostCenterSelector extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color: selectedCostCenter == null ? Colors.blue.shade700 : Colors.white,
+                    color: selectedCostCenter == null ? context.primary : context.surfaceCard,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: selectedCostCenter == null ? Colors.blue.shade700 : context.borderLight,
+                      color: selectedCostCenter == null ? context.primary : context.borderLight,
                       width: 2,
                     ),
                   ),
@@ -59,7 +59,7 @@ class CostCenterSelector extends StatelessWidget {
                     'All ($totalAssets)',
                     style: TextStyle(
                       fontSize: 13,
-                      color: selectedCostCenter == null ? Colors.white : context.textPrimary,
+                      color: selectedCostCenter == null ? context.onPrimary : context.textPrimary,
                     ),
                   ),
                 ),
@@ -77,14 +77,14 @@ class CostCenterSelector extends StatelessWidget {
                   constraints: const BoxConstraints(minWidth: 130),
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.blue.shade700 : Colors.white,
+                    color: isSelected ? context.primary : context.surfaceCard,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected ? Colors.blue.shade700 : context.borderLight,
+                      color: isSelected ? context.primary : context.borderLight,
                       width: 2,
                     ),
                     boxShadow: isSelected
-                        ? [BoxShadow(color: Colors.blue.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2))]
+                        ? [BoxShadow(color: context.primary.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2))]
                         : null,
                   ),
                   child: Column(
@@ -96,7 +96,7 @@ class CostCenterSelector extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.white : context.textPrimary,
+                          color: isSelected ? context.onPrimary : context.textPrimary,
                         ),
                       ),
                       Text(
@@ -105,7 +105,7 @@ class CostCenterSelector extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 9,
-                          color: isSelected ? Colors.white.withOpacity(0.7) : context.textSecondary,
+                          color: isSelected ? context.onPrimary.withOpacity(0.7) : context.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -115,7 +115,7 @@ class CostCenterSelector extends StatelessWidget {
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
                           color: isSelected
-                              ? Colors.white.withOpacity(0.8)
+                              ? context.onPrimary.withOpacity(0.8)
                               : (remaining > 0 ? Colors.orange.shade700 : Colors.green.shade700),
                         ),
                       ),

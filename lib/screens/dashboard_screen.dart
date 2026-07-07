@@ -23,19 +23,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _bulkProgress = 0;
   int _bulkTotal = 0;
 
+  List<CostCenterStats>? _cachedCostCenterStats;
+  Map<String, List<AssetClassStats>>? _cachedAssetClassStats;
+  String? _lastCalculatedYear;
+  int _lastAssetLength = 0;
+  int _lastAuditedLength = 0;
+
+  void _calculateStatsIfNeeded(AssetProvider assetProv, AuthProvider auth) {
+    if (_cachedCostCenterStats == null ||
+        _lastCalculatedYear != assetProv.auditYear ||
+        _lastAssetLength != assetProv.assets.length ||
+        _lastAuditedLength != assetProv.auditedAssetNos.length) {
+      final ctx = RBACContext(
+        role: auth.role,
+        allowedCostCenters: null,
+      );
+      _cachedCostCenterStats = RbacService.getCostCenterStats(
+        assetProv.assets,
+        assetProv.auditedAssetNos,
+        ctx,
+      );
+      _cachedAssetClassStats = RbacService.getCostCenterAssetClassStats(
+        assetProv.assets,
+        assetProv.auditedAssetNos,
+        ctx,
+      );
+      _lastCalculatedYear = assetProv.auditYear;
+      _lastAssetLength = assetProv.assets.length;
+      _lastAuditedLength = assetProv.auditedAssetNos.length;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final assetProv = context.watch<AssetProvider>();
     final auth = context.watch<AuthProvider>();
     final themeProvider = context.watch<ThemeProvider>(); // 🟢 เรียกใช้ watch เฝ้าดูสถานะธีม
 
-    if (assetProv.loading) {
+        if (assetProv.loading && assetProv.assets.isEmpty) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    if (assetProv.error != null) {
+    if (assetProv.error != null && assetProv.assets.isEmpty) {
       return Scaffold(
         body: Center(
           child: Column(
@@ -52,30 +83,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
+        // ใช้ Cache ป้องกัน CPU Overload ตอน Bulk Progress
+    _calculateStatsIfNeeded(assetProv, auth);
+
     final remaining = assetProv.totalCount - assetProv.auditedCount;
-
-    final costCenterStats = RbacService.getCostCenterStats(
-      assetProv.assets,
-      assetProv.auditedAssetNos,
-      RBACContext(
-        role: auth.role,
-        allowedCostCenters: null,
-      ),
-    );
-
-    final costCenterAssetClassStats = RbacService.getCostCenterAssetClassStats(
-      assetProv.assets,
-      assetProv.auditedAssetNos,
-      RBACContext(
-        role: auth.role,
-        allowedCostCenters: null,
-      ),
-    );
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('📊 Dashboard',
             style: TextStyle(fontWeight: FontWeight.bold)),
+        // แถบวิ่งเล็ก ๆ ใต้ AppBar ตอน refresh เงียบ
+        bottom: assetProv.loading
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(2),
+                child: LinearProgressIndicator(minHeight: 2),
+              )
+            : null,
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -197,8 +220,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 style:
                     TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            _buildCostCenterList(
-                costCenterStats, costCenterAssetClassStats),
+                        _buildCostCenterList(
+                _cachedCostCenterStats ?? [], _cachedAssetClassStats ?? {}),
 
             const SizedBox(height: 24),
             Center(
@@ -446,7 +469,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           _bulkProgress = successCount;
         });
-      }
+            }
+
+      // รอให้ดึงข้อมูลจากเซิร์ฟเวอร์เสร็จก่อน
+      await provider.retry();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -464,10 +490,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
       }
     } finally {
-      setState(() {
-        _isBulkAccepting = false;
-      });
-      provider.retry();
+      // ปิด spinner หลังจากข้อมูลใหม่พร้อมแล้ว
+      if (mounted) {
+        setState(() {
+          _isBulkAccepting = false;
+        });
+      }
     }
   }
 }
