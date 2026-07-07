@@ -73,7 +73,7 @@ class AuthProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      print('❌ Failed to fetch rights config: $e');
+      debugPrint('❌ Failed to fetch rights config: $e');
     } finally {
       _isRightsFetched = true;
       notifyListeners(); // สั่งให้ UI ถอดวงกลมโหลดออก

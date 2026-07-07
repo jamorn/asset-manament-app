@@ -1,5 +1,6 @@
 // lib/widgets/asset_class_picker.dart
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 
 class AssetClassInfo {
   final String assetClass;
@@ -51,10 +52,11 @@ class AssetClassPicker extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: selectedClass == null ? Colors.amber.shade800 : Colors.white,
+
+                  color: selectedClass == null ? Colors.amber.shade800 : context.surfaceCard,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: selectedClass == null ? Colors.amber.shade800 : Colors.grey.shade300,
+                    color: selectedClass == null ? Colors.amber.shade800 : context.borderLight,
                     width: 2,
                   ),
                 ),
@@ -63,7 +65,7 @@ class AssetClassPicker extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: selectedClass == null ? Colors.white : Colors.grey.shade700,
+                    color: selectedClass == null ? Colors.white : context.textSecondary,
                   ),
                 ),
               ),
@@ -84,10 +86,10 @@ class AssetClassPicker extends StatelessWidget {
                     constraints: const BoxConstraints(minWidth: 100),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.amber.shade800 : Colors.white,
+                      color: isSelected ? Colors.amber.shade800 : context.surfaceCard,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? Colors.amber.shade800 : Colors.grey.shade300,
+                        color: isSelected ? Colors.amber.shade800 : context.borderLight,
                         width: 2,
                       ),
                       boxShadow: isSelected
@@ -103,7 +105,7 @@ class AssetClassPicker extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : Colors.black87,
+                            color: isSelected ? Colors.white : context.textPrimary,
                           ),
                         ),
                         Text(
@@ -111,8 +113,7 @@ class AssetClassPicker extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 9,
-                            color: isSelected ? Colors.white.withOpacity(0.7) : Colors.grey.shade500,
+                            color: isSelected ? Colors.white.withOpacity(0.7) : context.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 2),

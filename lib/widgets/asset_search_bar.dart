@@ -1,5 +1,6 @@
 // lib/widgets/asset_search_bar.dart
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 
 class AssetSearchBar extends StatelessWidget {
   final String value;
@@ -28,17 +29,17 @@ class AssetSearchBar extends StatelessWidget {
         style: const TextStyle(fontSize: 14),
         decoration: InputDecoration(
           hintText: placeholder,
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+          prefixIcon: Icon(Icons.search, color: context.textSecondary),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           filled: true,
           fillColor: Theme.of(context).cardColor,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16.0), // มุมโค้งมนมนสไตล์ iPad mini (rounded-2xl)
-            borderSide: BorderSide(color: Colors.grey.shade300),
+            borderSide: BorderSide(color: context.borderLight),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16.0),
-            borderSide: BorderSide(color: Colors.grey.shade200),
+            borderSide: BorderSide(color: context.surfaceContainerHigh),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16.0),

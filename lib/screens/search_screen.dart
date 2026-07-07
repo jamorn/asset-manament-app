@@ -1,9 +1,11 @@
 // lib/screens/search_screen.dart
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 import 'package:provider/provider.dart';
 import '../models/asset_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/asset_provider.dart';
+import '../providers/theme_provider.dart'; // 🟢 เพิ่ม import theme_provider
 import '../services/rbac_service.dart';
 import '../configs/routes.dart';
 import '../widgets/asset_search_bar.dart';
@@ -23,6 +25,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final assetProv = context.watch<AssetProvider>();
+    final themeProvider = context.watch<ThemeProvider>(); // 🟢 เรียกใช้ watch เฝ้าดูสถานะธีม
 
     // Public route — skip RBAC filter (skipFilter = true)
     final allowedCostCenters = AppRoutes.getAllowedCostCenters(
@@ -47,8 +50,11 @@ class _SearchScreenState extends State<SearchScreen> {
         a.assetNo.toUpperCase().contains(q) ||
         a.description.toUpperCase().contains(q) ||
         a.lastLocationName.toUpperCase().contains(q) ||
+        a.mainLocation.toUpperCase().contains(q) ||
         a.costCenter.toUpperCase().contains(q) ||
-        a.costCenterName.toUpperCase().contains(q)
+        a.costCenterName.toUpperCase().contains(q) ||
+        a.assetOwner.toUpperCase().contains(q) ||
+        (a.remarks?.toUpperCase() ?? '').contains(q)
       ).toList();
     }
 
@@ -62,6 +68,9 @@ class _SearchScreenState extends State<SearchScreen> {
                 Navigator.pushNamed(context, AppRoutes.dashboard);
               } else if (route == 'home') {
                 Navigator.pop(context);
+              } else if (route == 'toggle_theme') { // 🟢 ดักฟังคำสั่งกดสลับธีมสี
+                final theme = context.read<ThemeProvider>();
+                theme.setThemeMode(theme.isDarkMode ? ThemeMode.light : ThemeMode.dark);
               } else if (route == 'logout') {
                 await context.read<AuthProvider>().logout();
               }
@@ -73,7 +82,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 backgroundImage: auth.user?.photoURL != null
                     ? NetworkImage(auth.user!.photoURL!)
                     : null,
-                backgroundColor: Colors.blueGrey,
+                backgroundColor: context.primary,
                 child: auth.user?.photoURL == null
                     ? Text(
                         (auth.user?.email ?? 'U')[0].toUpperCase(),
@@ -89,13 +98,24 @@ class _SearchScreenState extends State<SearchScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(auth.user?.displayName ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text(auth.user?.email ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    Text(auth.user?.email ?? '', style: TextStyle(fontSize: 11, color: context.textSecondary)),
                   ],
                 ),
               ),
               const PopupMenuDivider(),
               const PopupMenuItem(value: 'home', child: Text('🏠 Home (Survey)')),
               const PopupMenuItem(value: AppRoutes.dashboard, child: Text('📊 Dashboard')),
+              const PopupMenuDivider(),
+              PopupMenuItem( // 🟢 เพิ่มปุ่มสลับธีมสีเข้าไปในหน้าค้นหาทรัพย์สิน
+                value: 'toggle_theme',
+                child: Row(
+                  children: [
+                    Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode, size: 18),
+                    const SizedBox(width: 8),
+                    Text(themeProvider.isDarkMode ? '☀️ Light mode' : '🌙 Dark mode'),
+                  ],
+                ),
+              ),
               const PopupMenuDivider(),
               const PopupMenuItem(value: 'logout', child: Text('🚪 Sign out', style: TextStyle(color: Colors.red))),
             ],
@@ -114,11 +134,11 @@ class _SearchScreenState extends State<SearchScreen> {
             const SizedBox(height: 8),
             Text(
               '${filteredAssets.length} รายการ',
-              style: const TextStyle(fontSize: 11, color: Colors.grey),
+              style: TextStyle(fontSize: 11, color: context.textSecondary),
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: SingleChildScrollView( // 🟢 เติมตัวนี้ครอบเพื่อให้หน้า Search เลื่อนหน้าจอเฉพาะจุดได้ ม้าลายจะหายไปครับ
+              child: SingleChildScrollView( 
                 child: LoadMoreList(
                   assets: filteredAssets,
                   selectedAssetNo: null,
@@ -136,12 +156,45 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _showImageModal(String url) {
+    if (url.isEmpty) return;
     showDialog(
       context: context,
-      builder: (_) => Dialog(
-        child: url.isNotEmpty
-            ? Image.network(url, fit: BoxFit.contain)
-            : const Center(child: Text('No image')),
+      builder: (_) => GestureDetector(
+        onTap: () => Navigator.of(context).pop(),
+        child: Scaffold(
+          backgroundColor: Colors.black87,
+          body: Stack(
+            children: [
+              Center(
+                child: InteractiveViewer(
+                  child: Image.network(url, fit: BoxFit.contain),
+                ),
+              ),
+              Positioned(
+                top: 40,
+                right: 16,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: 1),
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.elasticOut,
+                  builder: (context, value, child) {
+                    return Transform.rotate(
+                      angle: value * 2 * 3.14159,
+                      child: child,
+                    );
+                  },
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white.withValues(alpha: 0.25),
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white, size: 24),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -149,10 +202,10 @@ class _SearchScreenState extends State<SearchScreen> {
   void _showAssetDetail(BuildContext context, AssetModel asset) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // เปิดสิทธิ์ให้ Bottom Sheet ขยายความสูงตามเนื้อหาได้อิสระ
+      isScrollControlled: true, 
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView( // ครอบตัวนี้เพิ่ม เพื่อเปลี่ยนปัญหาม้าลายในป๊อปอัปให้กลายเป็นเลื่อนได้แทน
+        child: SingleChildScrollView( 
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

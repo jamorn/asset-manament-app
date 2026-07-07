@@ -1,6 +1,7 @@
 // lib/widgets/asset_table_list.dart
 import 'package:flutter/material.dart';
 import '../models/asset_model.dart';
+import '../config/theme.dart'; // 🟢 ใช้ extension สำหรับสีตาม theme
 
 class AssetTableList extends StatelessWidget {
   final List<AssetModel> assets;
@@ -26,9 +27,9 @@ class AssetTableList extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(32),
         alignment: Alignment.center,
-        child: const Text(
+                child: Text(
           'ไม่พบรายการทรัพย์สิน',
-          style: TextStyle(color: Colors.grey, fontSize: 14),
+          style: TextStyle(color: context.textSecondary, fontSize: 14),
         ),
       );
     }
@@ -65,7 +66,7 @@ class AssetTableList extends StatelessWidget {
                     width: 54,
                     height: 54,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: context.surfaceContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     clipBehavior: Clip.antiAlias,
@@ -73,9 +74,9 @@ class AssetTableList extends StatelessWidget {
                         ? Image.network(
                             asset.lastImageUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, size: 20, color: Colors.grey),
+                            errorBuilder: (_, __, ___) => Icon(Icons.image_not_supported, size: 20, color: context.textSecondary),
                           )
-                        : const Icon(Icons.image, size: 20, color: Colors.grey),
+                        : Icon(Icons.image, size: 20, color: context.textSecondary),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -102,7 +103,7 @@ class AssetTableList extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         asset.description,
-                        style: const TextStyle(fontSize: 12, color: Colors.black87),
+                        style: TextStyle(fontSize: 12, color: context.textPrimary),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -146,7 +147,7 @@ class AssetTableList extends StatelessWidget {
                   children: [
                     Text(
                       asset.lastLocationName.isNotEmpty ? asset.lastLocationName : (asset.mainLocation.isNotEmpty ? asset.mainLocation : 'N/A'),
-                      style: const TextStyle(fontSize: 10, fontStyle: FontStyle.italic, color: Colors.grey),
+                      style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic, color: context.textSecondary),
                       textAlign: TextAlign.right,
                     ),
                     if (showCostCenter)
@@ -154,7 +155,7 @@ class AssetTableList extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Text(
                           'CC: ${asset.costCenter}',
-                          style: const TextStyle(fontSize: 10, color: Colors.blueGrey),
+                          style: TextStyle(fontSize: 10, color: context.primary),
                         ),
                       ),
                   ],

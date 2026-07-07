@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../models/temp_photo_model.dart';
 import '../providers/temp_photo_provider.dart';
+import '../providers/asset_provider.dart';
+import '../models/asset_model.dart';
 import '../utils/image_picker.dart';
 
 /// ฟอร์มสำหรับแก้ไข / เพิ่ม Temp Photo
@@ -31,6 +34,16 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
   late final TextEditingController _descCtrl;
   late final TextEditingController _locCtrl;
   late final TextEditingController _refCtrl;
+  late final FocusNode _refFocusNode;
+
+  /// Asset ที่ถูกเลือกจาก Reference Search (Auto-fill)
+  AssetModel? _selectedRefAsset;
+
+  /// เก็บรายการ assets ที่ filter ตามข้อความค้นหา
+  List<AssetModel> _filteredAssets = [];
+
+  /// แสดง/ซ่อน dropdown ผลการค้นหา
+  bool _showSearchResults = false;
 
   File? _imageFile;
   bool _isSubmitting = false;
@@ -43,14 +56,89 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
     _descCtrl = TextEditingController(text: widget.existing?.description ?? '');
     _locCtrl = TextEditingController(text: widget.existing?.location ?? '');
     _refCtrl = TextEditingController(text: widget.existing?.referenceAssetNo ?? '');
+    _refFocusNode = FocusNode();
+
+    // ถ้ามี referenceAssetNo จาก existing ให้โหลด AssetModel
+    if (widget.existing?.referenceAssetNo != null &&
+        widget.existing!.referenceAssetNo.isNotEmpty) {
+      _loadReferenceAsset(widget.existing!.referenceAssetNo);
+    }
+
+    // เมื่อพิมพ์ในช่องค้นหา
+    _refCtrl.addListener(_onRefChanged);
   }
 
   @override
   void dispose() {
     _descCtrl.dispose();
     _locCtrl.dispose();
+    _refCtrl.removeListener(_onRefChanged);
     _refCtrl.dispose();
+    _refFocusNode.dispose();
     super.dispose();
+  }
+
+  void _onRefChanged() {
+    final query = _refCtrl.text.trim();
+    if (query.isEmpty) {
+      setState(() {
+        _selectedRefAsset = null;
+        _filteredAssets = [];
+        _showSearchResults = false;
+      });
+      return;
+    }
+
+    final assetProv = context.read<AssetProvider>();
+    final q = query.toUpperCase();
+    final results = assetProv.assets.where((a) =>
+      a.assetNo.toUpperCase().contains(q) ||
+      a.description.toUpperCase().contains(q)
+    ).take(10).toList();
+
+    setState(() {
+      _filteredAssets = results;
+      _showSearchResults = results.isNotEmpty;
+    });
+  }
+
+  void _loadReferenceAsset(String assetNo) async {
+    // ใช้ context หลัง build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final assetProv = context.read<AssetProvider>();
+      final found = assetProv.assets.where(
+        (a) => a.assetNo == assetNo
+      ).firstOrNull;
+      if (found != null && mounted) {
+        setState(() {
+          _selectedRefAsset = found;
+          _autoFillFromAsset(found);
+        });
+      }
+    });
+  }
+
+  void _selectAsset(AssetModel asset) {
+    setState(() {
+      _selectedRefAsset = asset;
+      _showSearchResults = false;
+      _refCtrl.text = asset.assetNo;
+      _autoFillFromAsset(asset);
+    });
+    _refFocusNode.unfocus();
+  }
+
+  void _autoFillFromAsset(AssetModel asset) {
+    // ถ้ายังไม่ได้กรอก description ให้เติมจาก asset
+    if (_descCtrl.text.trim().isEmpty) {
+      _descCtrl.text = asset.description;
+    }
+    // ถ้ายังไม่ได้กรอก location ให้เติมจาก asset
+    if (_locCtrl.text.trim().isEmpty) {
+      _locCtrl.text = asset.lastLocationName.isNotEmpty
+          ? asset.lastLocationName
+          : asset.mainLocation;
+    }
   }
 
   @override
@@ -87,9 +175,9 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
                 width: 160,
                 height: 160,
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: context.surfaceContainer,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
+                  border: Border.all(color: context.borderLight),
                 ),
                 child: _buildImagePreview(),
               ),
@@ -106,18 +194,116 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
 
           const SizedBox(height: 12),
 
-          // Reference Asset No
-          if (!_isEditMode)
-            TextField(
-              controller: _refCtrl,
-              decoration: const InputDecoration(
-                labelText: 'เลขครุภัณฑ์อ้างอิง (Reference)',
-                hintText: 'เช่น 0100-0001',
-                border: OutlineInputBorder(),
-                isDense: true,
+          // ──────────────────────────────────────────
+          // 🔍 Reference Asset Search — พิมพ์เพื่อค้นหาครุภัณฑ์อ้างอิง
+          // พร้อม Auto-fill description/location เมื่อเลือก
+          // ──────────────────────────────────────────
+          if (!_isEditMode) ...[    
+            Text(
+              '🔍 ค้นหาครุภัณฑ์อ้างอิง (Reference Asset)',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: context.textSecondary,
               ),
-              style: const TextStyle(fontSize: 13),
             ),
+            const SizedBox(height: 6),
+            Stack(
+              children: [
+                TextField(
+                  controller: _refCtrl,
+                  focusNode: _refFocusNode,
+                  decoration: InputDecoration(
+                    hintText: 'พิมพ์เลขครุภัณฑ์หรือชื่อเพื่อค้นหา...',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    suffixIcon: _selectedRefAsset != null
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              setState(() {
+                                _selectedRefAsset = null;
+                                _refCtrl.clear();
+                                _filteredAssets = [];
+                                _showSearchResults = false;
+                              });
+                            },
+                          )
+                        : null,
+                  ),
+                  style: const TextStyle(fontSize: 13),
+                ),
+                // Dropdown ผลการค้นหา
+                if (_showSearchResults && _filteredAssets.isNotEmpty)
+                  Positioned(
+                    top: 48,
+                    left: 0,
+                    right: 0,
+                    child: Material(
+                      elevation: 4,
+                      borderRadius: BorderRadius.circular(8),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 200),
+                        child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          itemCount: _filteredAssets.length,
+                          itemBuilder: (context, index) {
+                            final asset = _filteredAssets[index];
+                            return ListTile(
+                              dense: true,
+                              title: Text(
+                                asset.assetNo,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(
+                                asset.description.length > 60
+                                    ? '${asset.description.substring(0, 60)}...'
+                                    : asset.description,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: context.textSecondary,
+                                ),
+                              ),
+                              onTap: () => _selectAsset(asset),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // Asset Info Card ขนาดเล็กเมื่อเลือก asset แล้ว
+            if (_selectedRefAsset != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: context.surfaceSubtle,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle,
+                        size: 16, color: Colors.green),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '✅ ${_selectedRefAsset!.assetNo} — '
+                        '${_selectedRefAsset!.description}',
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
           if (!_isEditMode) const SizedBox(height: 12),
 
           // Description
@@ -200,10 +386,10 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
     }
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
-        Icon(Icons.add_photo_alternate, size: 48, color: Colors.grey),
+      children: [
+        Icon(Icons.add_photo_alternate, size: 48, color: context.textSecondary),
         SizedBox(height: 4),
-        Text('แตะเพื่อเลือกรูป', style: TextStyle(fontSize: 11, color: Colors.grey)),
+        Text('แตะเพื่อเลือกรูป', style: TextStyle(fontSize: 11, color: context.textSecondary)),
       ],
     );
   }

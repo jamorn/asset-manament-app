@@ -17,8 +17,10 @@ class AssetProvider with ChangeNotifier {
   String? get error => _error;
   DateTime? get lastFetched => _lastFetched;
 
-  // RBAC context
+    // RBAC context (เก็บไว้ใช้ใน future เช่น role-based UI)
+  // ignore: unused_field
   String? _role;
+  // ignore: unused_field
   List<String>? _allowedCostCenters;
 
   // Dashboard / filter state

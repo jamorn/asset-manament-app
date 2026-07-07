@@ -1,5 +1,6 @@
 // lib/widgets/condition_select.dart
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 
 class ConditionSelect extends StatelessWidget {
   final String value;
@@ -39,7 +40,7 @@ class ConditionSelect extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
-            border: Border.all(color: Colors.grey.shade300, width: 2),
+            border: Border.all(color: context.borderLight, width: 2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: DropdownButtonHideUnderline(
@@ -84,7 +85,7 @@ class ConditionSelect extends StatelessWidget {
               fillColor: Theme.of(context).cardColor,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade300, width: 2),
+                borderSide: BorderSide(color: context.borderLight, width: 2),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),

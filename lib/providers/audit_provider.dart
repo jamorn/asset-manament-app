@@ -22,6 +22,9 @@ class AuditProvider with ChangeNotifier {
     required File imageFile,
     required String auditYear,
     required String auditorEmail,
+    String? environment,
+    String? mobility,
+    String? remarks,
   }) async {
     _submitStatus = SubmitStatus.submitting;
     _submitError = null;
@@ -39,7 +42,7 @@ class AuditProvider with ChangeNotifier {
           .collection('audit_logs')
           .doc();
 
-      await docRef.set({
+      final Map<String, dynamic> auditLogData = {
         'assetNo': asset.assetNo,
         'location': location,
         'condition': condition,
@@ -47,23 +50,44 @@ class AuditProvider with ChangeNotifier {
         'auditYear': auditYear,
         'auditorEmail': auditorEmail,
         'timestamp': FieldValue.serverTimestamp(),
-      });
+      };
+      if (environment != null && environment.isNotEmpty) {
+        auditLogData['environment'] = environment;
+      }
+      if (mobility != null && mobility.isNotEmpty) {
+        auditLogData['mobility'] = mobility;
+      }
+      if (remarks != null && remarks.isNotEmpty) {
+        auditLogData['remarks'] = remarks;
+      }
+      await docRef.set(auditLogData);
 
-      await _db
-          .collection('artifacts/irpc-asset-audit/public/data/assets')
-          .doc(asset.assetNo)
-          .update({
+      final Map<String, dynamic> updateData = {
         'lastLocationName': location,
         'lastCondition': condition,
         'lastImageUrl': imageUrl,
         'updatedAt': FieldValue.serverTimestamp(),
         'updatedBy': auditorEmail,
-      });
+      };
+      if (environment != null && environment.isNotEmpty) {
+        updateData['environment'] = environment;
+      }
+      if (mobility != null && mobility.isNotEmpty) {
+        updateData['mobility'] = mobility;
+      }
+      if (remarks != null && remarks.isNotEmpty) {
+        updateData['remarks'] = remarks;
+      }
+
+      await _db
+          .collection('artifacts/irpc-asset-audit/public/data/assets')
+          .doc(asset.assetNo)
+          .update(updateData);
 
       _submitStatus = SubmitStatus.success;
       return true;
     } catch (e) {
-      print('Audit submit failed: $e');
+      debugPrint('Audit submit failed: $e');
       _submitError = e.toString();
       _submitStatus = SubmitStatus.error;
       return false;

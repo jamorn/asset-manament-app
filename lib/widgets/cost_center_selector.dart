@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 import '../services/rbac_service.dart';
 
 class CostCenterSelector extends StatelessWidget {
@@ -24,14 +25,15 @@ class CostCenterSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'SELECT COST CENTER',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blueGrey, letterSpacing: 0.5),
+
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: context.primary, letterSpacing: 0.5),
         ),
         const SizedBox(height: 2),
         Text(
           '${costCenters.length} cost centers · $totalAssets total assets',
-          style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: 10, color: context.textSecondary),
         ),
         const SizedBox(height: 8),
         
@@ -49,7 +51,7 @@ class CostCenterSelector extends StatelessWidget {
                     color: selectedCostCenter == null ? Colors.blue.shade700 : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: selectedCostCenter == null ? Colors.blue.shade700 : Colors.grey.shade300,
+                      color: selectedCostCenter == null ? Colors.blue.shade700 : context.borderLight,
                       width: 2,
                     ),
                   ),
@@ -57,8 +59,7 @@ class CostCenterSelector extends StatelessWidget {
                     'All ($totalAssets)',
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: selectedCostCenter == null ? Colors.white : Colors.blueGrey.shade800,
+                      color: selectedCostCenter == null ? Colors.white : context.textPrimary,
                     ),
                   ),
                 ),
@@ -79,7 +80,7 @@ class CostCenterSelector extends StatelessWidget {
                     color: isSelected ? Colors.blue.shade700 : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected ? Colors.blue.shade700 : Colors.grey.shade300,
+                      color: isSelected ? Colors.blue.shade700 : context.borderLight,
                       width: 2,
                     ),
                     boxShadow: isSelected
@@ -95,7 +96,7 @@ class CostCenterSelector extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.white : Colors.black87,
+                          color: isSelected ? Colors.white : context.textPrimary,
                         ),
                       ),
                       Text(
@@ -104,7 +105,7 @@ class CostCenterSelector extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 9,
-                          color: isSelected ? Colors.white.withOpacity(0.7) : Colors.grey.shade600,
+                          color: isSelected ? Colors.white.withOpacity(0.7) : context.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 4),

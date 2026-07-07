@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 import 'package:flutter/services.dart';
 import '../models/temp_photo_model.dart';
 
@@ -41,7 +42,7 @@ class _TempPhotoAcceptDialogState extends State<TempPhotoAcceptDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: context.surfaceContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text('Temp ID: ${widget.acceptingTemp.tempId}\nDescription: ${widget.acceptingTemp.description}'),

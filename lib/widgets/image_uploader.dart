@@ -1,5 +1,6 @@
 // lib/widgets/image_uploader.dart
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 import 'dart:io';
 
 class ImageUploader extends StatelessWidget {
@@ -29,15 +30,15 @@ class ImageUploader extends StatelessWidget {
         // Label ส่วนหัวข้อ
         Row(
           children: [
-            const Text(
+            Text(
               'EVIDENCE PHOTO',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: context.primary),
             ),
             if (hasExistingPhoto) ...[
               const SizedBox(width: 6),
-              const Text(
+              Text(
                 '(หากต้องการเปลี่ยนรูปใหม่)',
-                style: TextStyle(fontSize: 11, color: Colors.grey),
+                style: TextStyle(fontSize: 11, color: context.textSecondary),
               ),
             ]
           ],
@@ -55,7 +56,7 @@ class ImageUploader extends StatelessWidget {
                   height: 200,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade300, width: 2),
+                    border: Border.all(color: context.borderLight, width: 2),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14),
@@ -79,7 +80,7 @@ class ImageUploader extends StatelessWidget {
                     color: Colors.black.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text(
+                  child: Text(
                     '📸 ภาพปัจจุบันในระบบ',
                     style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                   ),
@@ -104,9 +105,9 @@ class ImageUploader extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('📷', style: TextStyle(fontSize: 32)),
+                  Text('📷', style: TextStyle(fontSize: 32)),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'TOUCH TO SCAN / SNAP',
                     style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber),
                   ),
@@ -172,7 +173,7 @@ class ImageUploader extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4, right: 4),
                   child: Text(
                     '${fileMeta!['width']}×${fileMeta!['height']} · ${(fileMeta!['size'] / 1024).toStringAsFixed(1)} KB',
-                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                    style: TextStyle(fontSize: 10, color: context.textSecondary),
                   ),
                 ),
               ],

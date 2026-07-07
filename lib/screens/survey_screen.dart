@@ -1,12 +1,14 @@
 // lib/screens/survey_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 import 'package:provider/provider.dart';
 import '../models/asset_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/asset_provider.dart';
 import '../providers/temp_photo_provider.dart';
 import '../providers/audit_provider.dart';
+import '../providers/theme_provider.dart';
 import '../services/rbac_service.dart';
 import '../configs/routes.dart';
 import '../widgets/cost_center_selector.dart';
@@ -35,6 +37,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
     final auth = context.watch<AuthProvider>();
     final assetProv = context.watch<AssetProvider>();
     final auditProv = context.watch<AuditProvider>();
+    final themeProvider = context.watch<ThemeProvider>(); // 🟢 เรียกใช้เฝ้าดูสถานะธีม
 
     if (auth.isAppLoading) {
       return const Scaffold(
@@ -108,7 +111,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
     if (_selectedCostCenter == null && allowedCostCenters is List && allowedCostCenters!.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() => _selectedCostCenter = allowedCostCenters![0]);
+        setState(() => _selectedCostCenter = allowedCostCenters[0]);
       });
     }
 
@@ -135,7 +138,12 @@ class _SurveyScreenState extends State<SurveyScreen> {
       filteredAssets = filteredAssets.where((a) =>
         a.assetNo.toUpperCase().contains(q) ||
         a.description.toUpperCase().contains(q) ||
-        a.lastLocationName.toUpperCase().contains(q)
+        a.lastLocationName.toUpperCase().contains(q) ||
+        a.mainLocation.toUpperCase().contains(q) ||
+        a.costCenter.toUpperCase().contains(q) ||
+        a.costCenterName.toUpperCase().contains(q) ||
+        a.assetOwner.toUpperCase().contains(q) ||
+        (a.remarks?.toUpperCase() ?? '').contains(q)
       ).toList();
     }
 
@@ -163,6 +171,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 Navigator.pushNamed(context, AppRoutes.dashboard);
               } else if (route == AppRoutes.search) {
                 Navigator.pushNamed(context, AppRoutes.search);
+              } else if (route == 'toggle_theme') { // 🟢 ดักฟังคำสั่งกดสลับธีมสี
+                final theme = context.read<ThemeProvider>();
+                theme.setThemeMode(theme.isDarkMode ? ThemeMode.light : ThemeMode.dark);
               } else if (route == 'logout') {
                 context.read<AuthProvider>().logout();
               }
@@ -174,7 +185,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 backgroundImage: auth.user?.photoURL != null
                     ? NetworkImage(auth.user!.photoURL!)
                     : null,
-                backgroundColor: Colors.blueGrey,
+                backgroundColor: context.primary,
                 child: auth.user?.photoURL == null
                     ? Text(
                         (auth.user?.email ?? 'U')[0].toUpperCase(),
@@ -190,13 +201,24 @@ class _SurveyScreenState extends State<SurveyScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(auth.user?.displayName ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text(auth.user?.email ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    Text(auth.user?.email ?? '', style: TextStyle(fontSize: 11, color: context.textSecondary)),
                   ],
                 ),
               ),
               const PopupMenuDivider(),
               const PopupMenuItem(value: AppRoutes.dashboard, child: Text('📊 Dashboard')),
               const PopupMenuItem(value: AppRoutes.search, child: Text('🔍 Search')),
+              const PopupMenuDivider(),
+              PopupMenuItem( // 🟢 ปุ่มกดใน Popup เมนูสำหรับเปลี่ยนธีม
+                value: 'toggle_theme',
+                child: Row(
+                  children: [
+                    Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode, size: 18),
+                    const SizedBox(width: 8),
+                    Text(themeProvider.isDarkMode ? '☀️ Light mode' : '🌙 Dark mode'),
+                  ],
+                ),
+              ),
               const PopupMenuDivider(),
               const PopupMenuItem(value: 'logout', child: Text('🚪 Sign out', style: TextStyle(color: Colors.red))),
             ],
@@ -300,12 +322,45 @@ class _SurveyScreenState extends State<SurveyScreen> {
   }
 
   void _showImageModal(String url) {
+    if (url.isEmpty) return;
     showDialog(
       context: context,
-      builder: (_) => Dialog(
-        child: url != null && url.isNotEmpty
-            ? Image.network(url, fit: BoxFit.contain)
-            : const Center(child: Text('No image')),
+      builder: (_) => GestureDetector(
+        onTap: () => Navigator.of(context).pop(), // กดพื้นที่ว่างเพื่อปิด
+        child: Scaffold(
+          backgroundColor: Colors.black87,
+          body: Stack(
+            children: [
+              Center(
+                child: InteractiveViewer(
+                  child: Image.network(url, fit: BoxFit.contain),
+                ),
+              ),
+              Positioned(
+                top: 40,
+                right: 16,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: 1),
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.elasticOut,
+                  builder: (context, value, child) {
+                    return Transform.rotate(
+                      angle: value * 2 * 3.14159,
+                      child: child,
+                    );
+                  },
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white.withValues(alpha: 0.25),
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white, size: 24),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -319,12 +374,18 @@ class _SurveyScreenState extends State<SurveyScreen> {
     final location = data['location'] as String;
     final condition = data['condition'] as String;
     final imageFile = data['imageFile'] as File;
+    final environment = data['environment'] as String?;
+    final mobility = data['mobility'] as String?;
+    final remarks = data['remarks'] as String?;
     final asset = _selectedAsset!;
     final ok = await auditProv.submitAudit(
       asset: asset,
       location: location,
       condition: condition,
       imageFile: imageFile,
+      environment: environment,
+      mobility: mobility,
+      remarks: remarks,
       auditYear: DateTime.now().year.toString(),
       auditorEmail: context.read<AuthProvider>().user?.email ?? 'unknown',
     );

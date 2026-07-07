@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 import 'package:provider/provider.dart';
 import '../models/temp_photo_model.dart';
 import '../providers/temp_photo_provider.dart';
-import '../providers/asset_provider.dart';
-import '../services/rbac_service.dart';
 import 'temp_photo_card.dart';
 import 'temp_photo_edit_form.dart';
 import 'temp_photo_accept_modal.dart';
@@ -18,7 +17,6 @@ class TempPhotoPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tempProv = context.watch<TempPhotoProvider>();
-    final assetProv = context.watch<AssetProvider>();
 
     // Reference assets ที่ผ่าน RBAC filter
     // (ใช้ visibleTempPhotos เพื่อไม่ต้อง filter temp ซ้ำ)
@@ -72,17 +70,17 @@ class TempPhotoPanel extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: context.surfaceSubtle,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!),
+              border: Border.all(color: context.surfaceContainerHigh),
             ),
             child: Column(
               children: [
-                const Icon(Icons.photo_library_outlined,
-                    size: 48, color: Colors.grey),
+                Icon(Icons.photo_library_outlined,
+                    size: 48, color: context.textSecondary),
                 const SizedBox(height: 8),
-                const Text('ยังไม่มี Temp Photo',
-                    style: TextStyle(color: Colors.grey)),
+                Text('ยังไม่มี Temp Photo',
+                    style: TextStyle(color: context.textSecondary)),
                 const SizedBox(height: 8),
                 ElevatedButton.icon(
                   onPressed: () => _showAddForm(context),
@@ -182,13 +180,45 @@ class TempPhotoPanel extends StatelessWidget {
   }
 
   void _showImageModal(BuildContext context, String url) {
+    if (url.isEmpty) return;
     showDialog(
       context: context,
-      builder: (_) => Dialog(
-        child: url.isNotEmpty
-            ? InteractiveViewer(
-                child: Image.network(url, fit: BoxFit.contain))
-            : const Center(child: Text('No image')),
+      builder: (_) => GestureDetector(
+        onTap: () => Navigator.of(context).pop(),
+        child: Scaffold(
+          backgroundColor: Colors.black87,
+          body: Stack(
+            children: [
+              Center(
+                child: InteractiveViewer(
+                  child: Image.network(url, fit: BoxFit.contain),
+                ),
+              ),
+              Positioned(
+                top: 40,
+                right: 16,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: 1),
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.elasticOut,
+                  builder: (context, value, child) {
+                    return Transform.rotate(
+                      angle: value * 2 * 3.14159, // หมุน 360°
+                      child: child,
+                    );
+                  },
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white.withValues(alpha: 0.25),
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white, size: 24),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

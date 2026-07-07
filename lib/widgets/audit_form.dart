@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/asset_model.dart';
 import 'condition_select.dart';
+import '../config/theme.dart';
 
 class AuditForm extends StatefulWidget {
   final AssetModel? selectedAsset;
@@ -27,6 +28,9 @@ class _AuditFormState extends State<AuditForm> {
   final _locationController = TextEditingController();
   String _selectedCondition = '';
   String _customCondition = '';
+  String _selectedEnvironment = '';
+  String _selectedMobility = '';
+  final _remarksController = TextEditingController();
   File? _pickedImage;
   List<String> _savedLocations = [];
 
@@ -39,9 +43,15 @@ class _AuditFormState extends State<AuditForm> {
     _loadSavedLocations();
     // ดึงค่าตำแหน่งเริ่มต้นของครุภัณฑ์มาใส่ในฟอร์มรอไว้ล่วงหน้าเพื่อความรวดเร็ว
     if (widget.selectedAsset != null) {
-      _locationController.text = widget.selectedAsset!.lastLocationName.isNotEmpty
-          ? widget.selectedAsset!.lastLocationName
-          : widget.selectedAsset!.mainLocation;
+      final asset = widget.selectedAsset!;
+      _locationController.text = asset.lastLocationName.isNotEmpty
+          ? asset.lastLocationName
+          : asset.mainLocation;
+      _selectedEnvironment =
+          asset.environment.isNotEmpty ? asset.environment.toLowerCase() : '';
+      _selectedMobility =
+          asset.mobility.isNotEmpty ? asset.mobility.toLowerCase() : '';
+      _remarksController.text = asset.remarks ?? '';
     }
   }
 
@@ -51,9 +61,16 @@ class _AuditFormState extends State<AuditForm> {
     // รีเซ็ตค่าฟอร์มบางส่วนเมื่อผู้ใช้เปลี่ยนไปเลือกครุภัณฑ์ตัวใหม่
     if (oldWidget.selectedAsset?.assetNo != widget.selectedAsset?.assetNo) {
       setState(() {
-        _locationController.text = widget.selectedAsset?.lastLocationName ?? widget.selectedAsset?.mainLocation ?? '';
+        final a = widget.selectedAsset;
+        _locationController.text = a?.lastLocationName ?? a?.mainLocation ?? '';
         _selectedCondition = '';
         _customCondition = '';
+
+        // ใช้การดึงค่าแล้วทำ lowercase ถ้าไม่มีค่าให้เป็น string ว่าง
+        _selectedEnvironment = a?.environment.toLowerCase() ?? '';
+        _selectedMobility = a?.mobility.toLowerCase() ?? '';
+        _remarksController.text = a?.remarks ?? '';
+
         _pickedImage = null;
       });
     }
@@ -73,7 +90,7 @@ class _AuditFormState extends State<AuditForm> {
     List<String> currentList = prefs.getStringList(_locationsKey) ?? [];
     currentList.remove(loc);
     currentList.insert(0, loc); // เอาขึ้นอันดับแรก
-    
+
     // จำกัดเก็บไว้ไม่เกิน 50 รายการเหมือนระบบเดิม
     if (currentList.length > 50) {
       currentList = currentList.sublist(0, 50);
@@ -102,7 +119,8 @@ class _AuditFormState extends State<AuditForm> {
 
   void _handleSubmit() {
     final location = _locationController.text.trim();
-    final finalCondition = _selectedCondition == 'custom' ? _customCondition : _selectedCondition;
+    final finalCondition =
+        _selectedCondition == 'custom' ? _customCondition : _selectedCondition;
 
     // ตรวจสอบความถูกต้องของข้อมูล (Validation)
     if (location.isEmpty) {
@@ -131,6 +149,9 @@ class _AuditFormState extends State<AuditForm> {
     widget.onSubmit({
       'location': location,
       'condition': finalCondition,
+      'environment': _selectedEnvironment,
+      'mobility': _selectedMobility,
+      'remarks': _remarksController.text.trim(),
       'imageFile': _pickedImage,
     });
   }
@@ -138,27 +159,158 @@ class _AuditFormState extends State<AuditForm> {
   @override
   Widget build(BuildContext context) {
     if (widget.selectedAsset == null) {
-      return const Card(
+      return Card(
         child: Padding(
           padding: EdgeInsets.all(24.0),
           child: Center(
             child: Text(
               '👈 กรุณาเลือกครุภัณฑ์จากรายการฝั่งซ้ายเพื่อเริ่มตรวจนับ',
-              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: context.textSecondary, fontWeight: FontWeight.bold),
             ),
           ),
         ),
       );
     }
 
-    final asset = widget.selectedAsset!;
-
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 📍 ส่วนระบุสถานที่จัดวางครุภัณฑ์
-          const Text('LOCATION NAME', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                  // ──────────────────────────────────────────
+                  // 🏷️ Asset Info Card (แสดงข้อมูลครุภัณฑ์ที่เลือก)
+                  // ──────────────────────────────────────────
+                  if (widget.selectedAsset != null)
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: context.surfaceCard,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: context.borderLight),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.selectedAsset!.description.isNotEmpty
+                                ? widget.selectedAsset!.description
+                                : '(No Description)',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'เลขครุภัณฑ์: ${widget.selectedAsset!.assetNo}',
+                            style: TextStyle(
+                              color: context.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                          if (widget.selectedAsset!.costCenterName.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                'หน่วยงาน: ${widget.selectedAsset!.costCenterName}',
+                                style: TextStyle(
+                                  color: context.textSecondary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+
+                  // ──────────────────────────────────────────
+                  // 🌳 Environment (INDOOR / OUTDOOR)
+                  // ──────────────────────────────────────────
+                  Text('ENVIRONMENT',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: context.textSecondary)),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      _buildToggleChip(
+                        label: '🏠 INDOOR',
+                        value: 'indoor',
+                        groupValue: _selectedEnvironment,
+                        onSelected: (v) => setState(() => _selectedEnvironment = v),
+                      ),
+                      const SizedBox(width: 12),
+                      _buildToggleChip(
+                        label: '🌳 OUTDOOR',
+                        value: 'outdoor',
+                        groupValue: _selectedEnvironment,
+                        onSelected: (v) => setState(() => _selectedEnvironment = v),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ──────────────────────────────────────────
+                  // 🚚 Mobility (FIXED / PORTABLE)
+                  // ──────────────────────────────────────────
+                  Text('MOBILITY',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: context.textSecondary)),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      _buildToggleChip(
+                        label: '📌 FIXED',
+                        value: 'fixed',
+                        groupValue: _selectedMobility,
+                        onSelected: (v) => setState(() => _selectedMobility = v),
+                      ),
+                      const SizedBox(width: 12),
+                      _buildToggleChip(
+                        label: '🔄 PORTABLE',
+                        value: 'portable',
+                        groupValue: _selectedMobility,
+                        onSelected: (v) => setState(() => _selectedMobility = v),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ──────────────────────────────────────────
+                  // 📝 Remarks (หมายเหตุเพิ่มเติม)
+                  // ──────────────────────────────────────────
+                  Text('REMARKS',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: context.textSecondary)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: _remarksController,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      hintText: 'หมายเหตุเพิ่มเติม (ถ้ามี) ...',
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      filled: true,
+                      fillColor: Theme.of(context).cardColor,
+                      border:
+                          OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 📍 ส่วนระบุสถานที่จัดวางครุภัณฑ์
+          Text('LOCATION NAME',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: context.textSecondary)),
           const SizedBox(height: 6),
           RawAutocomplete<String>(
             textEditingController: _locationController,
@@ -168,19 +320,24 @@ class _AuditFormState extends State<AuditForm> {
                 return _savedLocations;
               }
               return _savedLocations.where((String option) {
-                return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                return option
+                    .toLowerCase()
+                    .contains(textEditingValue.text.toLowerCase());
               });
             },
-            fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+            fieldViewBuilder:
+                (context, controller, focusNode, onFieldSubmitted) {
               return TextField(
                 controller: controller,
                 focusNode: focusNode,
                 decoration: InputDecoration(
                   hintText: 'เช่น ตึกนวัตกรรม ชั้น 2, ห้องเซิร์ฟเวอร์...',
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   filled: true,
                   fillColor: Theme.of(context).cardColor,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
               );
             },
@@ -191,7 +348,8 @@ class _AuditFormState extends State<AuditForm> {
                   elevation: 4.0,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    width: MediaQuery.of(context).size.width * 0.4, // ควบคุมขนาดให้พอดีหน้าจอด้านขวาของแท็บเล็ต
+                    width: MediaQuery.of(context).size.width *
+                        0.4, // ควบคุมขนาดให้พอดีหน้าจอด้านขวาของแท็บเล็ต
                     constraints: BoxConstraints(maxHeight: 200),
                     child: ListView.builder(
                       padding: EdgeInsets.zero,
@@ -200,7 +358,8 @@ class _AuditFormState extends State<AuditForm> {
                       itemBuilder: (BuildContext context, int index) {
                         final String option = options.elementAt(index);
                         return ListTile(
-                          title: Text(option, style: const TextStyle(fontSize: 13)),
+                          title: Text(option,
+                              style: const TextStyle(fontSize: 13)),
                           onTap: () => onSelected(option),
                         );
                       },
@@ -222,15 +381,20 @@ class _AuditFormState extends State<AuditForm> {
           const SizedBox(height: 16),
 
           // 📸 ส่วนจัดการกล้อง/หลักฐานภาพถ่าย
-          const Text('EVIDENCE PHOTO', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+          Text('EVIDENCE PHOTO',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: context.textSecondary)),
           const SizedBox(height: 6),
           Container(
             width: double.infinity,
             height: 220,
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: context.surfaceContainer,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
+              border: Border.all(
+                  color: context.borderLight, style: BorderStyle.solid),
             ),
             child: _pickedImage != null
                 ? Stack(
@@ -245,10 +409,12 @@ class _AuditFormState extends State<AuditForm> {
                         top: 8,
                         right: 8,
                         child: CircleAvatar(
-                          backgroundColor: Colors.black54,
+                          backgroundColor: context.overlay,
                           child: IconButton(
-                            icon: const Icon(Icons.refresh, color: Colors.white),
-                            onPressed: () => setState(() => _pickedImage = null), // ล้างภาพถ่ายเพื่อเริ่มใหม่
+                            icon:
+                                const Icon(Icons.refresh, color: Colors.white),
+                            onPressed: () => setState(() => _pickedImage =
+                                null), // ล้างภาพถ่ายเพื่อเริ่มใหม่
                           ),
                         ),
                       )
@@ -262,7 +428,12 @@ class _AuditFormState extends State<AuditForm> {
                         label: 'ถ่ายรูปภาพสด',
                         onTap: () => _handleImagePick(ImageSource.camera),
                       ),
-                      VerticalDivider(width: 1, thickness: 1, indent: 40, endIndent: 40, color: Colors.grey.shade300),
+                      VerticalDivider(
+                          width: 1,
+                          thickness: 1,
+                          indent: 40,
+                          endIndent: 40,
+                          color: context.borderLight),
                       _buildMediaButton(
                         icon: Icons.photo_library,
                         label: 'เลือกจากคลังภาพ',
@@ -280,7 +451,8 @@ class _AuditFormState extends State<AuditForm> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
                 elevation: 2,
               ),
               onPressed: widget.isSubmitting ? null : _handleSubmit,
@@ -288,15 +460,26 @@ class _AuditFormState extends State<AuditForm> {
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
-                        SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+                        SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white)),
                         SizedBox(width: 12),
-                        Text('SAVING DATA...', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                        Text('SAVING DATA...',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
                       ],
                     )
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
-                        Text('CONFIRM & SAVE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                        Text('CONFIRM & SAVE',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.white)),
                         SizedBox(width: 8),
                         Text('💾', style: TextStyle(fontSize: 16)),
                       ],
@@ -308,7 +491,50 @@ class _AuditFormState extends State<AuditForm> {
     );
   }
 
-  Widget _buildMediaButton({required IconData icon, required String label, required VoidCallback onTap}) {
+    // ────────────────────────────────────────
+  // 🏷️ Helper: _buildToggleChip สำหรับ Environment / Mobility
+  // ────────────────────────────────────────
+  Widget _buildToggleChip({
+    required String label,
+    required String value,
+    required String groupValue,
+    required ValueChanged<String> onSelected,
+  }) {
+    final selected = value == groupValue;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onSelected(value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: selected
+                ? Theme.of(context).primaryColor
+                : context.surfaceContainer,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected
+                  ? Theme.of(context).primaryColor
+                  : context.borderLight,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: selected ? Colors.white : context.textSecondary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaButton(
+      {required IconData icon,
+      required String label,
+      required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -319,7 +545,9 @@ class _AuditFormState extends State<AuditForm> {
           children: [
             Icon(icon, size: 40, color: Theme.of(context).primaryColor),
             const SizedBox(height: 8),
-            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(label,
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           ],
         ),
       ),

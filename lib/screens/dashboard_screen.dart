@@ -1,10 +1,14 @@
+// lib/screens/dashboard_screen.dart
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../providers/asset_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart'; // 🟢 เพิ่ม import theme_provider
 import '../services/rbac_service.dart';
+import '../configs/routes.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -23,6 +27,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final assetProv = context.watch<AssetProvider>();
     final auth = context.watch<AuthProvider>();
+    final themeProvider = context.watch<ThemeProvider>(); // 🟢 เรียกใช้ watch เฝ้าดูสถานะธีม
 
     if (assetProv.loading) {
       return const Scaffold(
@@ -117,6 +122,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: () => assetProv.retry(),
           ),
+          
+          // 🟢 เพิ่มส่วนประกอบ User Profile Dropdown Menu ให้มีพฤติกรรมเหมือนหน้าแรก
+          PopupMenuButton<String>(
+            onSelected: (route) {
+              if (route == 'home') {
+                Navigator.of(context).popUntil((r) => r.isFirst);
+              } else if (route == AppRoutes.search) {
+                Navigator.pushReplacementNamed(context, AppRoutes.search);
+              } else if (route == 'toggle_theme') {
+                final theme = context.read<ThemeProvider>();
+                theme.setThemeMode(theme.isDarkMode ? ThemeMode.light : ThemeMode.dark);
+              } else if (route == 'logout') {
+                context.read<AuthProvider>().logout();
+                Navigator.of(context).popUntil((r) => r.isFirst);
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundImage: auth.user?.photoURL != null
+                    ? NetworkImage(auth.user!.photoURL!)
+                    : null,
+                backgroundColor: context.primary,
+                child: auth.user?.photoURL == null
+                    ? Text(
+                        (auth.user?.email ?? 'U')[0].toUpperCase(),
+                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                      )
+                    : null,
+              ),
+            ),
+            itemBuilder: (_) => [
+              PopupMenuItem<String>(
+                enabled: false,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(auth.user?.displayName ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text(auth.user?.email ?? '', style: TextStyle(fontSize: 11, color: context.textSecondary)),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(value: 'home', child: Text('🏠 Home (Survey)')),
+              const PopupMenuItem(value: AppRoutes.search, child: Text('🔍 Search')),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'toggle_theme',
+                child: Row(
+                  children: [
+                    Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode, size: 18),
+                    const SizedBox(width: 8),
+                    Text(themeProvider.isDarkMode ? '☀️ Light mode' : '🌙 Dark mode'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(value: 'logout', child: Text('🚪 Sign out', style: TextStyle(color: Colors.red))),
+            ],
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -139,7 +205,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Text(
                 'ข้อมูล ณ เวลาที่โหลดหน้า · ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
                 style:
-                    const TextStyle(fontSize: 10, color: Colors.grey),
+                    TextStyle(fontSize: 10, color: context.textSecondary),
               ),
             ),
           ],
@@ -179,7 +245,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 16),
             LinearProgressIndicator(
               value: progress,
-              backgroundColor: Colors.grey[200],
+              backgroundColor: context.surfaceContainerHigh,
               color: Colors.green,
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
@@ -200,7 +266,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: color)),
         Text(label,
             style:
-                const TextStyle(fontSize: 11, color: Colors.grey)),
+                TextStyle(fontSize: 11, color: context.textSecondary)),
       ],
     );
   }
@@ -253,7 +319,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             cc.total > 0 ? (cc.audited / cc.total) : 0,
                         minHeight: 4,
                         color: Colors.green,
-                        backgroundColor: Colors.grey[200],
+                          backgroundColor: context.surfaceContainerHigh,
                       ),
                     ),
                     Icon(
@@ -275,7 +341,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Container(
                   padding: const EdgeInsets.only(
                       left: 24, right: 16, bottom: 12),
-                  color: Colors.grey[50],
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? context.surfaceDarkest
+                      : context.surfaceSubtle,
                   child: Column(
                     children: [
                       ...acList.map((ac) => Padding(
@@ -286,9 +354,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 Expanded(
                                   child: Text(
                                     '${ac.assetClass} · ${ac.assetClassName}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontSize: 11,
-                                        color: Colors.black87),
+                                        color: Theme.of(context).brightness == Brightness.dark
+                                            ? context.borderLight
+                                            : context.textPrimary),
                                   ),
                                 ),
                                 Text(

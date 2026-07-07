@@ -1,5 +1,6 @@
 // temp_photo_card.dart
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 import '../models/temp_photo_model.dart';
 
 class TempPhotoCard extends StatelessWidget {
@@ -40,7 +41,7 @@ class TempPhotoCard extends StatelessWidget {
                         height: 64,
                         fit: BoxFit.cover,
                       )
-                    : Container(width: 64, height: 64, color: Colors.grey[300]),
+                    : Container(width: 64, height: 64, color: context.borderLight),
               ),
             ),
             const SizedBox(width: 12),

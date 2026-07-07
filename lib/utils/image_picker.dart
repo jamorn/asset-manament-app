@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 /// Utility สำหรับจัดการ Image Picking (กล้อง / แกลเลอรี)
@@ -23,7 +24,7 @@ class ImagePickerUtil {
       if (picked == null) return null;
       return File(picked.path);
     } catch (e) {
-      print('❌ pickFromCamera error: $e');
+      debugPrint('❌ pickFromCamera error: $e');
       return null;
     }
   }
@@ -44,7 +45,7 @@ class ImagePickerUtil {
       if (picked == null) return null;
       return File(picked.path);
     } catch (e) {
-      print('❌ pickFromGallery error: $e');
+      debugPrint('❌ pickFromGallery error: $e');
       return null;
     }
   }
