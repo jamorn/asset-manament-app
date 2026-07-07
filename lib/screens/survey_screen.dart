@@ -17,6 +17,7 @@ import '../widgets/asset_search_bar.dart';
 import '../widgets/load_more_list.dart';
 import '../widgets/audit_form.dart';
 import '../widgets/temp_photo_panel.dart';
+import '../widgets/image_modal.dart';
 
 class SurveyScreen extends StatefulWidget {
   const SurveyScreen({super.key});
@@ -322,47 +323,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
   }
 
   void _showImageModal(String url) {
-    if (url.isEmpty) return;
-    showDialog(
-      context: context,
-      builder: (_) => GestureDetector(
-        onTap: () => Navigator.of(context).pop(), // กดพื้นที่ว่างเพื่อปิด
-        child: Scaffold(
-          backgroundColor: Colors.black87,
-          body: Stack(
-            children: [
-              Center(
-                child: InteractiveViewer(
-                  child: Image.network(url, fit: BoxFit.contain),
-                ),
-              ),
-              Positioned(
-                top: 40,
-                right: 16,
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.elasticOut,
-                  builder: (context, value, child) {
-                    return Transform.rotate(
-                      angle: value * 2 * 3.14159,
-                      child: child,
-                    );
-                  },
-                  child: CircleAvatar(
-                    backgroundColor: Colors.red,
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white, size: 24),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    showImageModal(context, url);
   }
 
   Future<void> _handleAuditSubmit(

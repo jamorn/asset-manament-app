@@ -6,6 +6,7 @@ import '../providers/temp_photo_provider.dart';
 import 'temp_photo_card.dart';
 import 'temp_photo_edit_form.dart';
 import 'temp_photo_accept_modal.dart';
+import 'image_modal.dart';
 
 /// Composite Panel สำหรับจัดการ Temp Photos
 ///
@@ -180,47 +181,7 @@ class TempPhotoPanel extends StatelessWidget {
   }
 
   void _showImageModal(BuildContext context, String url) {
-    if (url.isEmpty) return;
-    showDialog(
-      context: context,
-      builder: (_) => GestureDetector(
-        onTap: () => Navigator.of(context).pop(),
-        child: Scaffold(
-          backgroundColor: Colors.black87,
-          body: Stack(
-            children: [
-              Center(
-                child: InteractiveViewer(
-                  child: Image.network(url, fit: BoxFit.contain),
-                ),
-              ),
-              Positioned(
-                top: 40,
-                right: 16,
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.elasticOut,
-                  builder: (context, value, child) {
-                    return Transform.rotate(
-                      angle: value * 2 * 3.14159, // หมุน 360°
-                      child: child,
-                    );
-                  },
-                  child: CircleAvatar(
-                    backgroundColor: Colors.red,
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white, size: 24),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    showImageModal(context, url);
   }
 
   Future<void> _confirmDelete(
