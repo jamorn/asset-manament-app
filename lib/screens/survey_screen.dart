@@ -1,13 +1,10 @@
 // lib/screens/survey_screen.dart
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import 'package:provider/provider.dart';
 import '../models/asset_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/asset_provider.dart';
-import '../providers/temp_photo_provider.dart';
-import '../providers/audit_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/rbac_service.dart';
 import '../configs/routes.dart';
@@ -15,12 +12,13 @@ import '../widgets/cost_center_selector.dart';
 import '../widgets/asset_class_picker.dart';
 import '../widgets/asset_search_bar.dart';
 import '../widgets/load_more_list.dart';
-import '../widgets/audit_form.dart';
-import '../widgets/temp_photo_panel.dart';
 import '../widgets/image_modal.dart';
+import 'audit_screen.dart';
 
 class SurveyScreen extends StatefulWidget {
-  const SurveyScreen({super.key});
+  final void Function(int index)? onTabSwitch;
+
+  const SurveyScreen({super.key, this.onTabSwitch});
 
   @override
   State<SurveyScreen> createState() => _SurveyScreenState();
@@ -33,12 +31,16 @@ class _SurveyScreenState extends State<SurveyScreen> {
   String? _selectedAssetClass;
   bool _showUnauditedOnly = true;
 
+  void _switchTab(int index) {
+    widget.onTabSwitch?.call(index);
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final assetProv = context.watch<AssetProvider>();
-    final auditProv = context.watch<AuditProvider>();
-    final themeProvider = context.watch<ThemeProvider>(); // 🟢 เรียกใช้เฝ้าดูสถานะธีม
+    final themeProvider = context.watch<ThemeProvider>();
+    final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
 
     if (auth.isAppLoading) {
       return const Scaffold(
@@ -165,65 +167,104 @@ class _SurveyScreenState extends State<SurveyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Asset Survey ${DateTime.now().year}'),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (route) {
-              if (route == AppRoutes.dashboard) {
-                Navigator.pushNamed(context, AppRoutes.dashboard);
-              } else if (route == AppRoutes.search) {
-                Navigator.pushNamed(context, AppRoutes.search);
-              } else if (route == 'toggle_theme') { // 🟢 ดักฟังคำสั่งกดสลับธีมสี
-                final theme = context.read<ThemeProvider>();
-                theme.setThemeMode(theme.isDarkMode ? ThemeMode.light : ThemeMode.dark);
-              } else if (route == 'logout') {
-                context.read<AuthProvider>().logout();
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: CircleAvatar(
-                radius: 16,
-                backgroundImage: auth.user?.photoURL != null
-                    ? NetworkImage(auth.user!.photoURL!)
-                    : null,
-                backgroundColor: context.primary,
-                child: auth.user?.photoURL == null
-                    ? Text(
-                        (auth.user?.email ?? 'U')[0].toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                      )
-                    : null,
-              ),
-            ),
-            itemBuilder: (_) => [
-              PopupMenuItem<String>(
-                enabled: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(auth.user?.displayName ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text(auth.user?.email ?? '', style: TextStyle(fontSize: 11, color: context.textSecondary)),
+        actions: isTablet
+            // ── iPad: แสดงปุ่มทั้งหมด ──
+            ? [
+                IconButton(
+                  tooltip: 'Search',
+                  icon: const Icon(Icons.search),
+                  onPressed: () => _switchTab(1),
+                ),
+                IconButton(
+                  tooltip: 'Dashboard',
+                  icon: const Icon(Icons.dashboard),
+                  onPressed: () => _switchTab(2),
+                ),
+                IconButton(
+                  tooltip: 'Temp Photos',
+                  icon: const Icon(Icons.camera_alt_outlined),
+                  onPressed: () => _switchTab(3),
+                ),
+                IconButton(
+                  tooltip: themeProvider.isDarkMode ? 'Light mode' : 'Dark mode',
+                  icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+                  onPressed: () {
+                    final t = context.read<ThemeProvider>();
+                    t.setThemeMode(t.isDarkMode ? ThemeMode.light : ThemeMode.dark);
+                  },
+                ),
+                CircleAvatar(
+                  radius: 16,
+                  backgroundImage: auth.user?.photoURL != null
+                      ? NetworkImage(auth.user!.photoURL!)
+                      : null,
+                  backgroundColor: context.primary,
+                  child: auth.user?.photoURL == null
+                      ? Text(
+                          (auth.user?.email ?? 'U')[0].toUpperCase(),
+                          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 4),
+              ]
+            // ── iPhone: PopupMenuButton (เหมือนเดิม) ──
+            : [
+                PopupMenuButton<String>(
+                  onSelected: (route) {
+                    if (route == 'temp_photos') {
+                      _switchTab(3);
+                    } else if (route == 'toggle_theme') {
+                      final theme = context.read<ThemeProvider>();
+                      theme.setThemeMode(theme.isDarkMode ? ThemeMode.light : ThemeMode.dark);
+                    } else if (route == 'logout') {
+                      context.read<AuthProvider>().logout();
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundImage: auth.user?.photoURL != null
+                          ? NetworkImage(auth.user!.photoURL!)
+                          : null,
+                      backgroundColor: context.primary,
+                      child: auth.user?.photoURL == null
+                          ? Text(
+                              (auth.user?.email ?? 'U')[0].toUpperCase(),
+                              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                            )
+                          : null,
+                    ),
+                  ),
+                  itemBuilder: (_) => [
+                    PopupMenuItem<String>(
+                      enabled: false,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(auth.user?.displayName ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          Text(auth.user?.email ?? '', style: TextStyle(fontSize: 11, color: context.textSecondary)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuDivider(),
+                    const PopupMenuItem(value: 'temp_photos', child: Text('📸 Temp Photos')),
+                    const PopupMenuDivider(),
+                    PopupMenuItem(
+                      value: 'toggle_theme',
+                      child: Row(
+                        children: [
+                          Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode, size: 18),
+                          const SizedBox(width: 8),
+                          Text(themeProvider.isDarkMode ? '☀️ Light mode' : '🌙 Dark mode'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuDivider(),
+                    const PopupMenuItem(value: 'logout', child: Text('🚪 Sign out', style: TextStyle(color: Colors.red))),
                   ],
                 ),
-              ),
-              const PopupMenuDivider(),
-              const PopupMenuItem(value: AppRoutes.dashboard, child: Text('📊 Dashboard')),
-              const PopupMenuItem(value: AppRoutes.search, child: Text('🔍 Search')),
-              const PopupMenuDivider(),
-              PopupMenuItem( // 🟢 ปุ่มกดใน Popup เมนูสำหรับเปลี่ยนธีม
-                value: 'toggle_theme',
-                child: Row(
-                  children: [
-                    Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode, size: 18),
-                    const SizedBox(width: 8),
-                    Text(themeProvider.isDarkMode ? '☀️ Light mode' : '🌙 Dark mode'),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              const PopupMenuItem(value: 'logout', child: Text('🚪 Sign out', style: TextStyle(color: Colors.red))),
-            ],
-          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -284,27 +325,17 @@ class _SurveyScreenState extends State<SurveyScreen> {
             LoadMoreList(
               assets: filteredAssets,
               selectedAssetNo: _selectedAsset?.assetNo,
-              onSelect: (asset) => setState(() => _selectedAsset = asset),
+              onSelect: (asset) => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AuditScreen(asset: asset),
+                ),
+              ),
               onImageClick: (url) => _showImageModal(url),
               auditedSet: assetProv.auditedAssetNos,
               pageSize: 50,
             ),
 
-            if (_selectedAsset != null) ...[
-              const Divider(height: 24),
-              const Text('Audit Form',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              AuditForm(
-                selectedAsset: _selectedAsset,
-                isSubmitting: auditProv.submitStatus == SubmitStatus.submitting,
-                onSubmit: (data) => _handleAuditSubmit(
-                  context, assetProv, auditProv, data),
-              ),
-            ],
-
-            const Divider(height: 32),
-            const TempPhotoPanel(),
             const SizedBox(height: 32),
           ],
         ),
@@ -324,38 +355,5 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   void _showImageModal(String url) {
     showImageModal(context, url);
-  }
-
-  Future<void> _handleAuditSubmit(
-    BuildContext context,
-    AssetProvider assetProv,
-    AuditProvider auditProv,
-    Map<String, dynamic> data,
-  ) async {
-    final location = data['location'] as String;
-    final condition = data['condition'] as String;
-    final imageFile = data['imageFile'] as File;
-    final environment = data['environment'] as String?;
-    final mobility = data['mobility'] as String?;
-    final remarks = data['remarks'] as String?;
-    final asset = _selectedAsset!;
-    final ok = await auditProv.submitAudit(
-      asset: asset,
-      location: location,
-      condition: condition,
-      imageFile: imageFile,
-      environment: environment,
-      mobility: mobility,
-      remarks: remarks,
-      auditYear: DateTime.now().year.toString(),
-      auditorEmail: context.read<AuthProvider>().user?.email ?? 'unknown',
-    );
-    if (ok && mounted) {
-      assetProv.markAsAudited(asset.assetNo);
-      setState(() => _selectedAsset = null);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${asset.assetNo} — บันทึกสำเร็จ!')),
-      );
-    }
   }
 }

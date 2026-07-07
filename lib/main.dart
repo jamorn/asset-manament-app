@@ -8,7 +8,7 @@ import 'providers/asset_provider.dart';
 import 'providers/temp_photo_provider.dart';
 import 'providers/audit_provider.dart';
 import 'providers/theme_provider.dart';
-import 'screens/survey_screen.dart';
+import 'screens/home_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/search_screen.dart';
 import 'configs/routes.dart';
@@ -53,7 +53,7 @@ class AssetApp extends StatelessWidget {
             themeMode: themeProvider.themeMode, // 🟢 ผูกตัวแปรควบคุมโหมดสีของระบบ
             initialRoute: AppRoutes.survey,
             routes: {
-              AppRoutes.survey: (_) => const SurveyScreen(),
+              AppRoutes.survey: (_) => const HomeScreen(),
               AppRoutes.dashboard: (_) => const DashboardScreen(),
               AppRoutes.search: (_) => const SearchScreen(),
             },

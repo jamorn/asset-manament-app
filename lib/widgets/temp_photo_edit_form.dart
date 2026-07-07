@@ -198,114 +198,110 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
           // 🔍 Reference Asset Search — พิมพ์เพื่อค้นหาครุภัณฑ์อ้างอิง
           // พร้อม Auto-fill description/location เมื่อเลือก
           // ──────────────────────────────────────────
-          if (!_isEditMode) ...[    
-            Text(
-              '🔍 ค้นหาครุภัณฑ์อ้างอิง (Reference Asset)',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: context.textSecondary,
-              ),
+          Text(
+            '🔍 ค้นหาครุภัณฑ์อ้างอิง (Reference Asset)',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: context.textSecondary,
             ),
-            const SizedBox(height: 6),
-            Stack(
-              children: [
-                TextField(
-                  controller: _refCtrl,
-                  focusNode: _refFocusNode,
-                  decoration: InputDecoration(
-                    hintText: 'พิมพ์เลขครุภัณฑ์หรือชื่อเพื่อค้นหา...',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    suffixIcon: _selectedRefAsset != null
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 18),
-                            onPressed: () {
-                              setState(() {
-                                _selectedRefAsset = null;
-                                _refCtrl.clear();
-                                _filteredAssets = [];
-                                _showSearchResults = false;
-                              });
-                            },
-                          )
-                        : null,
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _refCtrl,
+            focusNode: _refFocusNode,
+            decoration: InputDecoration(
+              hintText: 'พิมพ์เลขครุภัณฑ์หรือชื่อเพื่อค้นหา...',
+              border: OutlineInputBorder(),
+              filled: true,
+              fillColor: context.surfaceCard,
+              isDense: true,
+              suffixIcon: _selectedRefAsset != null
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () {
+                        setState(() {
+                          _selectedRefAsset = null;
+                          _refCtrl.clear();
+                          _filteredAssets = [];
+                          _showSearchResults = false;
+                        });
+                      },
+                    )
+                  : null,
+            ),
+            style: const TextStyle(fontSize: 13),
+          ),
+          // Results Box
+          if (_showSearchResults && _filteredAssets.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Container(
+              decoration: BoxDecoration(
+                color: context.surfaceCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.primary.withValues(alpha: 0.3)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
-                  style: const TextStyle(fontSize: 13),
-                ),
-                // Dropdown ผลการค้นหา
-                if (_showSearchResults && _filteredAssets.isNotEmpty)
-                  Positioned(
-                    top: 48,
-                    left: 0,
-                    right: 0,
-                    child: Material(
-                      elevation: 4,
-                      borderRadius: BorderRadius.circular(8),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 200),
-                        child: ListView.builder(
-                          padding: EdgeInsets.zero,
-                          shrinkWrap: true,
-                          itemCount: _filteredAssets.length,
-                          itemBuilder: (context, index) {
-                            final asset = _filteredAssets[index];
-                            return ListTile(
-                              dense: true,
-                              title: Text(
-                                asset.assetNo,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
+                ],
+              ),
+              child: Column(
+                children: [
+                  for (int i = 0; i < _filteredAssets.length && i < 5; i++)
+                    Column(
+                      children: [
+                        if (i > 0) Divider(height: 1, color: context.borderLight),
+                        InkWell(
+                          onTap: () => _selectAsset(_filteredAssets[i]),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: context.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    _filteredAssets[i].assetNo,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: context.primary,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              subtitle: Text(
-                                asset.description.length > 60
-                                    ? '${asset.description.substring(0, 60)}...'
-                                    : asset.description,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: context.textSecondary,
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    _filteredAssets[i].description.length > 50
+                                        ? '${_filteredAssets[i].description.substring(0, 50)}...'
+                                        : _filteredAssets[i].description,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: context.textSecondary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                              ),
-                              onTap: () => _selectAsset(asset),
-                            );
-                          },
+                                Icon(Icons.arrow_forward_ios, size: 12, color: context.textSecondary),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 6),
-            // Asset Info Card ขนาดเล็กเมื่อเลือก asset แล้ว
-            if (_selectedRefAsset != null)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: context.surfaceSubtle,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.check_circle,
-                        size: 16, color: Colors.green),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        '✅ ${_selectedRefAsset!.assetNo} — '
-                        '${_selectedRefAsset!.description}',
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
           ],
-          if (!_isEditMode) const SizedBox(height: 12),
-
+          const SizedBox(height: 6),
           // Description
           TextField(
             controller: _descCtrl,

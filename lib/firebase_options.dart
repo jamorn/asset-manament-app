@@ -65,7 +65,7 @@ class DefaultFirebaseOptions {
     projectId: 'asset-audit-95195',
     storageBucket: 'asset-audit-95195.firebasestorage.app',
     iosClientId: '488926667242-e7v8hmvb7j1o5rpos7tpqrpoclfipqhj.apps.googleusercontent.com',
-    iosBundleId: 'com.example.assetApp',
+    iosBundleId: 'com.irpc.assetApp',
   );
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyC1aOLhKdptkthsr-Su7KvNs_gb_cOUwBM',
@@ -74,7 +74,7 @@ class DefaultFirebaseOptions {
     projectId: 'asset-audit-95195',
     storageBucket: 'asset-audit-95195.firebasestorage.app',
     iosClientId: '488926667242-e7v8hmvb7j1o5rpos7tpqrpoclfipqhj.apps.googleusercontent.com',
-    iosBundleId: 'com.example.assetApp',
+    iosBundleId: 'com.irpc.assetApp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
