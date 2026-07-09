@@ -42,7 +42,11 @@ class AssetApp extends StatelessWidget {
           update: (_, auth, prev) =>
               prev!..updateRbacContext(auth.role, auth.allowedCostCenters),
         ),
-        ChangeNotifierProvider(create: (_) => AuditProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, AuditProvider>(
+          create: (_) => AuditProvider(),
+          update: (_, auth, prev) =>
+              prev!..updateRbacContext(auth.role, auth.allowedCostCenters),
+        ),
       ],
       child: Consumer2<AuthProvider, ThemeProvider>(
         // 🟢 เปลี่ยนเป็น Consumer2 เพื่อฟังค่าจาก ThemeProvider ด้วย

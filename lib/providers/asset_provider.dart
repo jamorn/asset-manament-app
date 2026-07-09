@@ -197,22 +197,7 @@ class AssetProvider with ChangeNotifier {
           auditedSet.add(segments[assetIdx + 1]);
         }
       }
-      if (auditedSet.isEmpty && _assets.isNotEmpty) {
-        for (int i = 0; i < _assets.length; i += 10) {
-          for (final asset in _assets.skip(i).take(10)) {
-            try {
-              final logSnap = await _db
-                  .collection('$_firestoreCollection/${asset.assetNo}/audit_logs')
-                  .where('auditYear', isEqualTo: _auditYear)
-                  .limit(1)
-                  .get(const GetOptions(source: Source.server));
-              if (logSnap.docs.isNotEmpty) {
-                auditedSet.add(asset.assetNo);
-              }
-            } catch (_) {}
-          }
-        }
-      }
+      // ✅ ใช้ collectionGroup query เพียงอย่างเดียว — ไม่มี fallback N+1 loop
     } catch (e) {
       debugPrint('❌ Failed to load audited asset nos: $e');
     }

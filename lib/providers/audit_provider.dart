@@ -10,11 +10,29 @@ class AuditProvider with ChangeNotifier {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
+  // RBAC context
+  String? _role;
+  List<String>? _allowedCostCenters;
+
   SubmitStatus _submitStatus = SubmitStatus.idle;
   String? _submitError;
 
   SubmitStatus get submitStatus => _submitStatus;
   String? get submitError => _submitError;
+
+  void updateRbacContext(String? role, List<String>? allowedCostCenters) {
+    _role = role;
+    _allowedCostCenters = allowedCostCenters;
+  }
+
+  bool _canAuditAsset(AssetModel asset) {
+    // owner สามารถ audit ได้ทั้งหมด
+    if (_role == 'owner') return true;
+    // ถ้าไม่มี allowedCostCenters → ไม่มีสิทธิ์
+    if (_allowedCostCenters == null || _allowedCostCenters!.isEmpty) return false;
+    // ตรวจสอบว่า asset อยู่ใน cost center ที่มีสิทธิ์
+    return _allowedCostCenters!.contains(asset.costCenter);
+  }
 
   Future<bool> submitAudit({
     required AssetModel asset,
@@ -32,6 +50,14 @@ class AuditProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      // 0) ตรวจสอบ permission ก่อน
+      if (!_canAuditAsset(asset)) {
+        _submitError = 'You do not have permission to audit this asset';
+        _submitStatus = SubmitStatus.error;
+        return false;
+      }
+
+      // 1) อัปโหลดรูปไปยัง Firebase Storage (ยังไม่มี transaction)
       final String imageName =
           '${asset.assetNo}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final storageRef =
@@ -39,53 +65,49 @@ class AuditProvider with ChangeNotifier {
       await storageRef.putFile(imageFile);
       final String imageUrl = await storageRef.getDownloadURL();
 
-      final docRef = _db
-          .collection(FirestorePath.assets)
-          .doc(asset.assetNo)
-          .collection('audit_logs')
-          .doc();
+      final assetRef = _db.collection(FirestorePath.assets).doc(asset.assetNo);
+      final auditLogRef = assetRef.collection('audit_logs').doc();
 
-      final Map<String, dynamic> auditLogData = {
-        'assetNo': asset.assetNo,
-        'location': location,
-        'condition': condition,
-        'imageUrl': imageUrl,
-        'auditYear': auditYear,
-        'auditorEmail': auditorEmail,
-        'timestamp': FieldValue.serverTimestamp(),
-      };
-      if (environment != null && environment.isNotEmpty) {
-        auditLogData['environment'] = environment;
-      }
-      if (mobility != null && mobility.isNotEmpty) {
-        auditLogData['mobility'] = mobility;
-      }
-      if (remarks != null && remarks.isNotEmpty) {
-        auditLogData['remarks'] = remarks;
-      }
-      await docRef.set(auditLogData);
+      // 2) ใช้ runTransaction เพื่อให้ audit log + asset update atomic
+      await _db.runTransaction((transaction) async {
+        final Map<String, dynamic> auditLogData = {
+          'assetNo': asset.assetNo,
+          'location': location,
+          'condition': condition,
+          'imageUrl': imageUrl,
+          'auditYear': auditYear,
+          'auditorEmail': auditorEmail,
+          'timestamp': FieldValue.serverTimestamp(),
+        };
+        if (environment != null && environment.isNotEmpty) {
+          auditLogData['environment'] = environment;
+        }
+        if (mobility != null && mobility.isNotEmpty) {
+          auditLogData['mobility'] = mobility;
+        }
+        if (remarks != null && remarks.isNotEmpty) {
+          auditLogData['remarks'] = remarks;
+        }
+        transaction.set(auditLogRef, auditLogData);
 
-      final Map<String, dynamic> updateData = {
-        'lastLocationName': location,
-        'lastCondition': condition,
-        'lastImageUrl': imageUrl,
-        'updatedAt': FieldValue.serverTimestamp(),
-        'updatedBy': auditorEmail,
-      };
-      if (environment != null && environment.isNotEmpty) {
-        updateData['environment'] = environment;
-      }
-      if (mobility != null && mobility.isNotEmpty) {
-        updateData['mobility'] = mobility;
-      }
-      if (remarks != null && remarks.isNotEmpty) {
-        updateData['remarks'] = remarks;
-      }
-
-      await _db
-          .collection(FirestorePath.assets)
-          .doc(asset.assetNo)
-          .update(updateData);
+        final Map<String, dynamic> updateData = {
+          'lastLocationName': location,
+          'lastCondition': condition,
+          'lastImageUrl': imageUrl,
+          'updatedAt': FieldValue.serverTimestamp(),
+          'updatedBy': auditorEmail,
+        };
+        if (environment != null && environment.isNotEmpty) {
+          updateData['environment'] = environment;
+        }
+        if (mobility != null && mobility.isNotEmpty) {
+          updateData['mobility'] = mobility;
+        }
+        if (remarks != null && remarks.isNotEmpty) {
+          updateData['remarks'] = remarks;
+        }
+        transaction.update(assetRef, updateData);
+      });
 
       _submitStatus = SubmitStatus.success;
       return true;
