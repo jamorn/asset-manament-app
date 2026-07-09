@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/asset_model.dart';
+import '../configs/constants.dart';
 
 class AssetProvider with ChangeNotifier {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -12,23 +13,16 @@ class AssetProvider with ChangeNotifier {
   String? _error;
   DateTime? _lastFetched;
 
-    List<AssetModel> get assets => _assets;
+  List<AssetModel> get assets => _assets;
   bool get loading => _loading;
   String? get error => _error;
   DateTime? get lastFetched => _lastFetched;
-
-    // RBAC context (เก็บไว้ใช้ใน future เช่น role-based UI)
-  // ignore: unused_field
-  String? _role;
-  // ignore: unused_field
-  List<String>? _allowedCostCenters;
 
   // Dashboard / filter state
   String _auditYear = DateTime.now().year.toString();
   Set<String> _auditedAssetNos = {};
   bool _auditLogsLoading = true;
 
-  // Extra getters for Dashboard
   String get auditYear => _auditYear;
   Set<String> get auditedAssetNos => _auditedAssetNos;
   bool get auditLogsLoading => _auditLogsLoading;
@@ -39,22 +33,16 @@ class AssetProvider with ChangeNotifier {
   static const String _cacheKey = 'assetapp-assets-cache';
   static const String _cacheTimestampKey = 'assetapp-assets-cache-ts';
   static const int _cacheTtlMs = 5 * 60 * 1000;
+  static const String _firestoreCollection = FirestorePath.assets;
 
-  static const String _firestoreCollection =
-      'artifacts/irpc-asset-audit/public/data/assets';
-
-  AssetProvider() {
+    AssetProvider() {
     _init();
   }
 
-  /// RBAC context updater (called from ProxyProvider in main.dart)
   void updateRbacContext(String? role, List<String>? allowedCostCenters) {
-    _role = role;
-    _allowedCostCenters = allowedCostCenters;
-    notifyListeners();
+    // no-op — kept for backward compatibility
   }
 
-  /// เปลี่ยนปี audit และโหลด audit logs ใหม่
   void setAuditYear(String year) {
     if (_auditYear == year) return;
     _auditYear = year;
@@ -67,7 +55,6 @@ class AssetProvider with ChangeNotifier {
     await _loadAuditedAssetNos();
   }
 
-  // ฟังก์ชันหลักดักจับการดึงข้อมูลและคุมแคช
   Future<void> loadAssetsWithCacheLogic() async {
     _loading = true;
     _error = null;
@@ -84,15 +71,15 @@ class AssetProvider with ChangeNotifier {
 
         if (age < _cacheTtlMs) {
           final List<dynamic> decoded = jsonDecode(cachedJson);
-          _assets = decoded.map((item) => AssetModel.fromJson(item as Map<String, dynamic>)).toList();
+          _assets = decoded
+              .map((item) => AssetModel.fromJson(item as Map<String, dynamic>))
+              .toList();
           _lastFetched = cachedTs;
           _loading = false;
           notifyListeners();
           return;
         }
       }
-
-      // หากแคชหมดอายุหรือเป็นเครื่องใหม่ -> บินไปดึงสดจาก Cloud Firestore
       await fetchAssetsFromServer();
     } catch (e) {
       _error = e.toString();
@@ -103,8 +90,11 @@ class AssetProvider with ChangeNotifier {
 
   Future<void> fetchAssetsFromServer() async {
     try {
-      // ดึงจากคอลเลกชันหลัก เรียงลำดับตามความต้องการเดิม
-            final snapshot = await _db.collection(_firestoreCollection).orderBy('assetNo').get();
+      debugPrint('🔄 fetchAssetsFromServer: loading from server...');
+      final snapshot = await _db
+          .collection(_firestoreCollection)
+          .orderBy('assetNo')
+          .get(const GetOptions(source: Source.server));
 
       _assets = snapshot.docs.map((doc) {
         return AssetModel.fromFirestore(doc.data(), doc.id);
@@ -113,12 +103,10 @@ class AssetProvider with ChangeNotifier {
       _lastFetched = DateTime.now();
       _loading = false;
 
-      // บันทึกความจำลง Local Storage ทันที
       final prefs = await SharedPreferences.getInstance();
       final jsonStr = jsonEncode(_assets.map((e) => e.toJson()).toList());
       await prefs.setString(_cacheKey, jsonStr);
       await prefs.setString(_cacheTimestampKey, _lastFetched!.toIso8601String());
-
     } catch (e) {
       _error = 'Failed to load assets: $e';
       _loading = false;
@@ -127,13 +115,10 @@ class AssetProvider with ChangeNotifier {
     }
   }
 
-    /// อัปเดต asset ใน cache แบบ optimistic (partial merge)
   void updateAssetInCache(String assetNo, Map<String, dynamic> updatedData) {
     final index = _assets.indexWhere((a) => a.assetNo == assetNo);
-
     if (index != -1) {
       final existing = _assets[index];
-
       _assets[index] = AssetModel(
         assetNo: updatedData['assetNo']?.toString() ?? existing.assetNo,
         description: updatedData['description']?.toString() ?? existing.description,
@@ -156,37 +141,54 @@ class AssetProvider with ChangeNotifier {
         updatedBy: updatedData['updatedBy']?.toString() ?? existing.updatedBy,
         history: existing.history,
       );
-
       notifyListeners();
       _syncCache();
     }
   }
 
-  /// mark asset as audited (optimistic)
   void markAsAudited(String assetNo) {
     _auditedAssetNos = {..._auditedAssetNos, assetNo};
     notifyListeners();
   }
 
-  /// retry — reload จาก Firestore
+  Future<void> refreshSingleAsset(String assetNo) async {
+    try {
+      final doc = await _db
+          .collection(_firestoreCollection)
+          .doc(assetNo)
+          .get(const GetOptions(source: Source.server));
+      if (doc.exists && doc.data() != null) {
+        final updated = AssetModel.fromFirestore(doc.data()!, doc.id);
+        final index = _assets.indexWhere((a) => a.assetNo == assetNo);
+        if (index != -1) {
+          _assets[index] = updated;
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ refreshSingleAsset($assetNo) failed: $e');
+    }
+  }
+
   Future<void> retry() async {
     _auditedAssetNos = {};
     _auditLogsLoading = true;
     notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_cacheKey);
+    await prefs.remove(_cacheTimestampKey);
     await loadAssetsWithCacheLogic();
     await _loadAuditedAssetNos();
   }
 
-  /// โหลด audit logs เพื่อหา assetNo ที่ audit แล้ว
   Future<void> _loadAuditedAssetNos() async {
     _auditLogsLoading = true;
     final auditedSet = <String>{};
-
     try {
       final auditQuery = await _db
           .collectionGroup('audit_logs')
           .where('auditYear', isEqualTo: _auditYear)
-          .get();
+          .get(const GetOptions(source: Source.server));
 
       for (final d in auditQuery.docs) {
         final segments = d.reference.path.split('/');
@@ -195,8 +197,6 @@ class AssetProvider with ChangeNotifier {
           auditedSet.add(segments[assetIdx + 1]);
         }
       }
-
-      // fallback: ถ้า collectionGroup ไม่เจอ ให้ loop เฉพาะ
       if (auditedSet.isEmpty && _assets.isNotEmpty) {
         for (int i = 0; i < _assets.length; i += 10) {
           for (final asset in _assets.skip(i).take(10)) {
@@ -205,7 +205,7 @@ class AssetProvider with ChangeNotifier {
                   .collection('$_firestoreCollection/${asset.assetNo}/audit_logs')
                   .where('auditYear', isEqualTo: _auditYear)
                   .limit(1)
-                  .get();
+                  .get(const GetOptions(source: Source.server));
               if (logSnap.docs.isNotEmpty) {
                 auditedSet.add(asset.assetNo);
               }
@@ -216,7 +216,6 @@ class AssetProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('❌ Failed to load audited asset nos: $e');
     }
-
     _auditedAssetNos = auditedSet;
     _auditLogsLoading = false;
     notifyListeners();

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../configs/constants.dart';
 
 class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -16,14 +17,18 @@ class AuthProvider with ChangeNotifier {
   // Getters ล้อตาม Next.js เป๊ะๆ
   User? get user => _user;
   bool get loading => _loading;
-  
+
   // โหลดจาก cache ทันทีหรือเช็คว่าสิทธิ์จาก Firestore โหลดเสร็จแล้วยัง
-  bool get authorized => _user != null && _currentUserEntry != null && (_isRightsFetched || _allowedUsers.isNotEmpty);
-  
-  bool get isAppLoading => _loading || (_user != null && !_isRightsFetched && _allowedUsers.isEmpty);
+  bool get authorized =>
+      _user != null &&
+      _currentUserEntry != null &&
+      (_isRightsFetched || _allowedUsers.isNotEmpty);
+
+  bool get isAppLoading =>
+      _loading || (_user != null && !_isRightsFetched && _allowedUsers.isEmpty);
 
   static const String _usersCacheKey = 'assetapp-allowed-users-cache';
-  static const String _allowedUsersDoc = 'artifacts/irpc-asset-audit/config/settings';
+  static const String _allowedUsersDoc = FirestorePath.settings;
 
   AuthProvider() {
     _initAuthListener();
@@ -43,7 +48,7 @@ class AuthProvider with ChangeNotifier {
     _auth.authStateChanges().listen((User? user) async {
       _user = user;
       _loading = false;
-      
+
       if (user != null) {
         _isRightsFetched = false;
         notifyListeners();
@@ -60,13 +65,13 @@ class AuthProvider with ChangeNotifier {
     try {
       final docRef = _db.doc(_allowedUsersDoc);
       final snapshot = await docRef.get();
-      
+
       if (snapshot.exists && snapshot.data() != null) {
         final data = snapshot.data()!;
         // ในระบบคุณ ก้อนข้อมูลชื่อ 'allowedUsers' เป็นอาเรย์รวมสิทธิ์พนักงาน
         if (data['allowedUsers'] != null) {
           _allowedUsers = data['allowedUsers'] as List<dynamic>;
-          
+
           // เซฟลง Cache ทันทีเผื่อเปิดแอปออฟไลน์รอบหน้า
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(_usersCacheKey, jsonEncode(_allowedUsers));
@@ -84,7 +89,7 @@ class AuthProvider with ChangeNotifier {
   Map<String, dynamic>? get _currentUserEntry {
     if (_user == null || _user!.email == null) return null;
     final email = _user!.email!.trim().toLowerCase();
-    
+
     try {
       return _allowedUsers.firstWhere(
         (u) => u['email'].toString().trim().toLowerCase() == email,
@@ -101,12 +106,16 @@ class AuthProvider with ChangeNotifier {
   // คำนวณสิทธิ์เข้าถึงคลังข้อมูลเพื่อไปส่งต่อให้ระบบฟิลเตอร์ RBAC
   List<String>? get allowedCostCenters {
     if (_loading) return null; // ส่ง undefined (ในภาษา Dart ใช้ null แทน)
-    if (_user == null) return []; // ยังไม่ล็อกอิน ส่งอาเรย์ว่างกันเหนี่ยวด้านความปลอดภัย
-    if (_allowedUsers.isEmpty && !_isRightsFetched) return null; // โหลดสิทธิ์ยังไม่เสร็จ
-    if (_currentUserEntry == null) return []; // ไม่มีรายชื่ออยู่ในระบบ ห้ามเข้าดู
+    if (_user == null)
+      return []; // ยังไม่ล็อกอิน ส่งอาเรย์ว่างกันเหนี่ยวด้านความปลอดภัย
+    if (_allowedUsers.isEmpty && !_isRightsFetched)
+      return null; // โหลดสิทธิ์ยังไม่เสร็จ
+    if (_currentUserEntry == null)
+      return []; // ไม่มีรายชื่ออยู่ในระบบ ห้ามเข้าดู
 
-    final List<dynamic> ccList = _currentUserEntry!['costCenters'] as List<dynamic>;
-    
+    final List<dynamic> ccList =
+        _currentUserEntry!['costCenters'] as List<dynamic>;
+
     // พอร์ตโลจิก: หากเจอรหัส '*' (สิทธิ์สูงสุด Owner) -> ส่งค่ากลับเป็น null เพื่อมองข้ามการฟิลเตอร์
     if (ccList.any((cc) => cc.toString().trim() == '*')) {
       return null;
@@ -115,7 +124,7 @@ class AuthProvider with ChangeNotifier {
     return ccList.map((e) => e.toString()).toList();
   }
 
-  // ฟังก์ชัน Login ด้วย Google 
+  // ฟังก์ชัน Login ด้วย Google
   Future<void> login() async {
     final GoogleAuthProvider googleProvider = GoogleAuthProvider();
     await _auth.signInWithProvider(googleProvider);

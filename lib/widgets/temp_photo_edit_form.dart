@@ -55,7 +55,8 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
     super.initState();
     _descCtrl = TextEditingController(text: widget.existing?.description ?? '');
     _locCtrl = TextEditingController(text: widget.existing?.location ?? '');
-    _refCtrl = TextEditingController(text: widget.existing?.referenceAssetNo ?? '');
+    _refCtrl =
+        TextEditingController(text: widget.existing?.referenceAssetNo ?? '');
     _refFocusNode = FocusNode();
 
     // ถ้ามี referenceAssetNo จาก existing ให้โหลด AssetModel
@@ -91,10 +92,12 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
 
     final assetProv = context.read<AssetProvider>();
     final q = query.toUpperCase();
-    final results = assetProv.assets.where((a) =>
-      a.assetNo.toUpperCase().contains(q) ||
-      a.description.toUpperCase().contains(q)
-    ).take(10).toList();
+    final results = assetProv.assets
+        .where((a) =>
+            a.assetNo.toUpperCase().contains(q) ||
+            a.description.toUpperCase().contains(q))
+        .take(10)
+        .toList();
 
     setState(() {
       _filteredAssets = results;
@@ -106,9 +109,8 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
     // ใช้ context หลัง build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final assetProv = context.read<AssetProvider>();
-      final found = assetProv.assets.where(
-        (a) => a.assetNo == assetNo
-      ).firstOrNull;
+      final found =
+          assetProv.assets.where((a) => a.assetNo == assetNo).firstOrNull;
       if (found != null && mounted) {
         setState(() {
           _selectedRefAsset = found;
@@ -154,8 +156,8 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
             children: [
               Text(
                 _isEditMode ? '✏️ แก้ไข Temp Photo' : '📸 เพิ่ม Temp Photo',
-                style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
               const Spacer(),
               if (_isEditMode)
@@ -239,7 +241,8 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
               decoration: BoxDecoration(
                 color: context.surfaceCard,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.primary.withValues(alpha: 0.3)),
+                border:
+                    Border.all(color: context.primary.withValues(alpha: 0.3)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.08),
@@ -253,17 +256,21 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
                   for (int i = 0; i < _filteredAssets.length && i < 5; i++)
                     Column(
                       children: [
-                        if (i > 0) Divider(height: 1, color: context.borderLight),
+                        if (i > 0)
+                          Divider(height: 1, color: context.borderLight),
                         InkWell(
                           onTap: () => _selectAsset(_filteredAssets[i]),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
                             child: Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: context.primary.withValues(alpha: 0.1),
+                                    color:
+                                        context.primary.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
@@ -289,7 +296,8 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                Icon(Icons.arrow_forward_ios, size: 12, color: context.textSecondary),
+                                Icon(Icons.arrow_forward_ios,
+                                    size: 12, color: context.textSecondary),
                               ],
                             ),
                           ),
@@ -333,9 +341,8 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: _isSubmitting
-                  ? null
-                  : () => _handleSubmit(context, prov),
+              onPressed:
+                  _isSubmitting ? null : () => _handleSubmit(context, prov),
               icon: _isSubmitting
                   ? const SizedBox(
                       width: 16,
@@ -343,7 +350,8 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: Colors.white))
                   : Icon(_isEditMode ? Icons.save : Icons.add_a_photo),
-              label: Text(_isEditMode ? '💾 บันทึกการแก้ไข' : '💾 เพิ่ม Temp Photo'),
+              label: Text(
+                  _isEditMode ? '💾 บันทึกการแก้ไข' : '💾 เพิ่ม Temp Photo'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -376,7 +384,8 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
         child: Image.network(
           widget.existing!.photoUrl,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 48),
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.broken_image, size: 48),
         ),
       );
     }
@@ -385,7 +394,8 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
       children: [
         Icon(Icons.add_photo_alternate, size: 48, color: context.textSecondary),
         SizedBox(height: 4),
-        Text('แตะเพื่อเลือกรูป', style: TextStyle(fontSize: 11, color: context.textSecondary)),
+        Text('แตะเพื่อเลือกรูป',
+            style: TextStyle(fontSize: 11, color: context.textSecondary)),
       ],
     );
   }
@@ -422,7 +432,8 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
     }
   }
 
-  Future<void> _handleSubmit(BuildContext context, TempPhotoProvider prov) async {
+  Future<void> _handleSubmit(
+      BuildContext context, TempPhotoProvider prov) async {
     if (_descCtrl.text.trim().isEmpty && _refCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('⚠️ กรุณากรอกคำอธิบายหรือเลขครุภัณฑ์')),
@@ -464,7 +475,9 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
       widget.onSaved?.call();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_isEditMode ? '✅ แก้ไข Temp Photo สำเร็จ' : '✅ เพิ่ม Temp Photo สำเร็จ'),
+          content: Text(_isEditMode
+              ? '✅ แก้ไข Temp Photo สำเร็จ'
+              : '✅ เพิ่ม Temp Photo สำเร็จ'),
         ),
       );
       Navigator.of(context).pop();

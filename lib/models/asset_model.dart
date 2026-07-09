@@ -48,15 +48,29 @@ class AssetModel {
     // ฟังก์ชันช่วยดึงชื่อย่อ Asset Class แปลงจากอาร์เรย์ด้านล่าง
     String getShortClassName(String rawClass) {
       final classMap = {
-        'A2000': 'Building', 'A2004': 'Machine', 'A2007': 'Piping',
-        'A2008': 'Plant Equipment', 'A2009': 'Tools', 'A2011': 'Furniture',
-        'A3001': 'Vehicle', 'A3002': 'Heavy Vehicle', 'A5004': 'ROU Vehicle',
-        'A62009': 'LVA Tools', 'A62011': 'LVA Furniture', 'A63001': 'LVA Vehicle',
-        'A9000': 'LVA Equipment', 'A9002': 'LVA Furniture', 'A9004': 'LVA Vehicle',
-        'A9801': 'AUC Machine', 'A9802': 'AUC Other', 'A2005': 'Machine (POM)',
+        'A2000': 'Building',
+        'A2004': 'Machine',
+        'A2007': 'Piping',
+        'A2008': 'Plant Equipment',
+        'A2009': 'Tools',
+        'A2011': 'Furniture',
+        'A3001': 'Vehicle',
+        'A3002': 'Heavy Vehicle',
+        'A5004': 'ROU Vehicle',
+        'A62009': 'LVA Tools',
+        'A62011': 'LVA Furniture',
+        'A63001': 'LVA Vehicle',
+        'A9000': 'LVA Equipment',
+        'A9002': 'LVA Furniture',
+        'A9004': 'LVA Vehicle',
+        'A9801': 'AUC Machine',
+        'A9802': 'AUC Other',
+        'A2005': 'Machine (POM)',
       };
       return classMap[rawClass] ?? rawClass;
-    };
+    }
+
+    ;
 
     // ตัวแปลงพวกค่าประเภท Timestamp ของ Firestore
     DateTime? parseTimestamp(dynamic v) {
@@ -70,11 +84,13 @@ class AssetModel {
     }
 
     return AssetModel(
-      assetNo: json['assetNo']?.toString() ?? docId, // ใช้ docId ถ้า assetNo เป็นว่าง
+      assetNo: json['assetNo']?.toString() ??
+          docId, // ใช้ docId ถ้า assetNo เป็นว่าง
       description: json['description']?.toString() ?? '(ไม่มีคำอธิบาย)',
       assetClass: json['assetClass']?.toString() ?? '',
       // ลอจิกพอร์ต: ถ้าไม่มี assetClassName ให้วิ่งไปดึงจาก lookup map ทันที
-      assetClassName: json['assetClassName']?.toString() ?? getShortClassName(json['assetClass']?.toString() ?? ''),
+      assetClassName: json['assetClassName']?.toString() ??
+          getShortClassName(json['assetClass']?.toString() ?? ''),
       capDate: json['capDate']?.toString(),
       assetOwner: json['assetOwner']?.toString() ?? '',
       costCenter: json['costCenter']?.toString() ?? '',
@@ -116,7 +132,7 @@ class AssetModel {
       'remarks': remarks,
       'updatedAt': updatedAt?.toIso8601String(),
       'updatedBy': updatedBy,
-            'history': history,
+      'history': history,
     };
   }
 

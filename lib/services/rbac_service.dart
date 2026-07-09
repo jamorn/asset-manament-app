@@ -17,35 +17,46 @@ class RbacService {
   // ------------------------------------------------------------------
   // กรองชุดข้อมูลครุภัณฑ์ปกติ
   // ------------------------------------------------------------------
-  static List<AssetModel> filterAssets(List<AssetModel> assets, RBACContext ctx) {
+  static List<AssetModel> filterAssets(
+      List<AssetModel> assets, RBACContext ctx) {
     if (ctx.skipFilter) return assets; // หน้า Search สาธารณะ ไม่ต้องกรอง
-    if (ctx.allowedCostCenters == null) return assets; // สิทธิ์สูงสุด (Owner เจอรหัส '*') ส่องเห็นทั้งหมด
-    if (ctx.allowedCostCenters!.isEmpty) return []; // ไม่มีสิทธิ์ บล็อกให้เห็นศูนย์ชิ้น
+    if (ctx.allowedCostCenters == null)
+      return assets; // สิทธิ์สูงสุด (Owner เจอรหัส '*') ส่องเห็นทั้งหมด
+    if (ctx.allowedCostCenters!.isEmpty)
+      return []; // ไม่มีสิทธิ์ บล็อกให้เห็นศูนย์ชิ้น
 
     // ดึงเฉพาะชิ้นที่มีรหัส CostCenter ตรงตามบัตรสิทธิ์พนักงาน
-    return assets.where((a) => ctx.allowedCostCenters!.contains(a.costCenter)).toList();
+    return assets
+        .where((a) => ctx.allowedCostCenters!.contains(a.costCenter))
+        .toList();
   }
 
   // ------------------------------------------------------------------
   // กรองชุดภาพ TempPhoto
   // ------------------------------------------------------------------
-    static List<TempPhoto> filterTempPhotos(List<TempPhoto> photos, RBACContext ctx) {
+  static List<TempPhoto> filterTempPhotos(
+      List<TempPhoto> photos, RBACContext ctx) {
     if (ctx.skipFilter) return photos;
     if (ctx.allowedCostCenters == null) return photos;
     if (ctx.allowedCostCenters!.isEmpty) return [];
 
-    return photos.where((p) => ctx.allowedCostCenters!.contains(p.costCenter)).toList();
+    return photos
+        .where((p) => ctx.allowedCostCenters!.contains(p.costCenter))
+        .toList();
   }
 
   // ------------------------------------------------------------------
   // กรอง Reference Assets (สำหรับ TempPhotoForm)
   // ------------------------------------------------------------------
-  static List<AssetModel> filterReferenceAssets(List<AssetModel> assets, RBACContext ctx) {
+  static List<AssetModel> filterReferenceAssets(
+      List<AssetModel> assets, RBACContext ctx) {
     if (ctx.skipFilter) return assets;
     if (ctx.allowedCostCenters == null) return assets;
     if (ctx.allowedCostCenters!.isEmpty) return [];
 
-    return assets.where((a) => ctx.allowedCostCenters!.contains(a.costCenter)).toList();
+    return assets
+        .where((a) => ctx.allowedCostCenters!.contains(a.costCenter))
+        .toList();
   }
 
   // ------------------------------------------------------------------
@@ -58,11 +69,15 @@ class RbacService {
     final visible = ctx.skipFilter ? assets : filterAssets(assets, ctx);
     final map = <String, CostCenterInfo>{};
     for (final a in visible) {
-      map.putIfAbsent(a.costCenter, () => CostCenterInfo(
-        costCenter: a.costCenter,
-        costCenterName: a.costCenterName,
-        count: 0,
-      )).count++;
+      map
+          .putIfAbsent(
+              a.costCenter,
+              () => CostCenterInfo(
+                    costCenter: a.costCenter,
+                    costCenterName: a.costCenterName,
+                    count: 0,
+                  ))
+          .count++;
     }
     final list = map.values.toList();
     list.sort((a, b) => a.costCenter.compareTo(b.costCenter));
@@ -80,12 +95,14 @@ class RbacService {
     final visible = ctx.skipFilter ? assets : filterAssets(assets, ctx);
     final map = <String, CostCenterStats>{};
     for (final a in visible) {
-      map.putIfAbsent(a.costCenter, () => CostCenterStats(
-        costCenter: a.costCenter,
-        costCenterName: a.costCenterName,
-        total: 0,
-        audited: 0,
-      ));
+      map.putIfAbsent(
+          a.costCenter,
+          () => CostCenterStats(
+                costCenter: a.costCenter,
+                costCenterName: a.costCenterName,
+                total: 0,
+                audited: 0,
+              ));
       map[a.costCenter]!.total++;
       if (auditedAssetNos.contains(a.assetNo)) {
         map[a.costCenter]!.audited++;
@@ -109,12 +126,14 @@ class RbacService {
     for (final a in visible) {
       ccMap.putIfAbsent(a.costCenter, () => {});
       final acMap = ccMap[a.costCenter]!;
-      acMap.putIfAbsent(a.assetClass, () => AssetClassStats(
-        assetClass: a.assetClass,
-        assetClassName: a.assetClassName,
-        total: 0,
-        audited: 0,
-      ));
+      acMap.putIfAbsent(
+          a.assetClass,
+          () => AssetClassStats(
+                assetClass: a.assetClass,
+                assetClassName: a.assetClassName,
+                total: 0,
+                audited: 0,
+              ));
       acMap[a.assetClass]!.total++;
       if (auditedAssetNos.contains(a.assetNo)) {
         acMap[a.assetClass]!.audited++;

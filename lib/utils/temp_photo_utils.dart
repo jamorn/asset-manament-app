@@ -21,7 +21,7 @@ class TempPhotoUtils {
   static Future<void> saveLocation(String loc) async {
     if (loc.trim().isEmpty) return;
     final prefs = await SharedPreferences.getInstance();
-    
+
     List<String> list = await getSavedLocations();
     // เอาตัวที่ชื่อซ้ำออกก่อน แล้วใส่ตัวล่าสุดเข้าไปที่หัวขบวน (unshift)
     list.removeWhere((x) => x == loc);

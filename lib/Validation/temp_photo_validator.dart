@@ -13,12 +13,14 @@ class TempPhotoValidator {
 
     // ตรวจสอบว่าเป็นตัวเลขเท่านั้น (/^\d+$/)
     if (!RegExp(r'^\d+$').hasMatch(trimmed)) {
-      return AcceptResult(ok: false, message: '❌ เลขครุภัณฑ์ต้องเป็นตัวเลขเท่านั้น');
+      return AcceptResult(
+          ok: false, message: '❌ เลขครุภัณฑ์ต้องเป็นตัวเลขเท่านั้น');
     }
 
     // ตรวจสอบความยาว 12 หลัก
     if (trimmed.length != 12) {
-      return AcceptResult(ok: false, message: '❌ เลขครุภัณฑ์ต้องมีความยาว 12 หลัก');
+      return AcceptResult(
+          ok: false, message: '❌ เลขครุภัณฑ์ต้องมีความยาว 12 หลัก');
     }
 
     return AcceptResult(ok: true, message: trimmed);

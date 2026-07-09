@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../models/temp_photo_model.dart';
 import '../services/rbac_service.dart';
+import '../configs/constants.dart';
 
 enum SubmitStatus { idle, submitting, success, error }
 
@@ -25,17 +26,15 @@ class TempPhotoProvider with ChangeNotifier {
   SubmitStatus get submitStatus => _submitStatus;
   String? get submitError => _submitError;
 
-  List<TempPhoto> get visibleTempPhotos =>
-      RbacService.filterTempPhotos(_tempPhotos, RBACContext(
+  List<TempPhoto> get visibleTempPhotos => RbacService.filterTempPhotos(
+      _tempPhotos,
+      RBACContext(
         role: _role,
         allowedCostCenters: _allowedCostCenters,
       ));
 
-  static const String _collectionPath =
-      'artifacts/irpc-asset-audit/public/data/temp_photos';
-  static const String _storageTempPath =
-      'artifacts/irpc-asset-audit/temp_photos';
-
+  static const String _collectionPath = FirestorePath.tempPhotos;
+  static const String _storageTempPath = FirestorePath.tempPhotosStorage;
   void updateRbacContext(String? role, List<String>? allowedCostCenters) {
     _role = role;
     _allowedCostCenters = allowedCostCenters;
@@ -93,19 +92,21 @@ class TempPhotoProvider with ChangeNotifier {
         'status': 'pending',
       };
       await _db.collection(_collectionPath).doc(tempId).set(data);
-      _tempPhotos.insert(0, TempPhoto(
-        tempId: tempId,
-        referenceAssetNo: referenceAssetNo,
-        description: description,
-        photoUrl: photoUrl,
-        location: location,
-        capturedAt: DateTime.now(),
-        assetClass: assetClass,
-        assetClassName: assetClassName,
-        costCenter: costCenter,
-        costCenterName: costCenterName,
-        status: TempPhotoStatus.pending,
-      ));
+      _tempPhotos.insert(
+          0,
+          TempPhoto(
+            tempId: tempId,
+            referenceAssetNo: referenceAssetNo,
+            description: description,
+            photoUrl: photoUrl,
+            location: location,
+            capturedAt: DateTime.now(),
+            assetClass: assetClass,
+            assetClassName: assetClassName,
+            costCenter: costCenter,
+            costCenterName: costCenterName,
+            status: TempPhotoStatus.pending,
+          ));
       _submitStatus = SubmitStatus.success;
       return true;
     } catch (e) {
@@ -126,9 +127,7 @@ class TempPhotoProvider with ChangeNotifier {
     notifyListeners();
     try {
       final existing = _tempPhotos.firstWhere((t) => t.tempId == tempId);
-      final assetRef = _db
-          .collection('artifacts/irpc-asset-audit/public/data/assets')
-          .doc(newAssetNo);
+      final assetRef = _db.collection(FirestorePath.assets).doc(newAssetNo);
       await assetRef.set({
         'assetNo': newAssetNo,
         'description': existing.description,
@@ -150,8 +149,8 @@ class TempPhotoProvider with ChangeNotifier {
         'status': 'merged',
         'mergedAssetNo': newAssetNo,
       });
-      _tempPhotos = _tempPhotos.map((t) =>
-          t.tempId == tempId
+      _tempPhotos = _tempPhotos
+          .map((t) => t.tempId == tempId
               ? TempPhoto(
                   tempId: t.tempId,
                   referenceAssetNo: t.referenceAssetNo,
@@ -165,7 +164,8 @@ class TempPhotoProvider with ChangeNotifier {
                   costCenterName: t.costCenterName,
                   status: TempPhotoStatus.merged,
                 )
-              : t).toList();
+              : t)
+          .toList();
       _submitStatus = SubmitStatus.success;
       notifyListeners();
       return AcceptResult(ok: true, message: 'สร้าง Asset $newAssetNo สำเร็จ!');
@@ -195,8 +195,11 @@ class TempPhotoProvider with ChangeNotifier {
       String photoUrl = '';
       final existing = _tempPhotos.firstWhere((t) => t.tempId == tempId);
       if (imageFile != null) {
-        try { await _storage.ref().child('$_storageTempPath/$tempId.jpg').delete(); } catch (_) {}
-        final storageRef = _storage.ref().child('$_storageTempPath/$tempId.jpg');
+        try {
+          await _storage.ref().child('$_storageTempPath/$tempId.jpg').delete();
+        } catch (_) {}
+        final storageRef =
+            _storage.ref().child('$_storageTempPath/$tempId.jpg');
         await storageRef.putFile(imageFile);
         photoUrl = await storageRef.getDownloadURL();
       } else {
@@ -213,8 +216,8 @@ class TempPhotoProvider with ChangeNotifier {
         'costCenter': costCenter,
         'costCenterName': costCenterName,
       }, SetOptions(merge: true));
-      _tempPhotos = _tempPhotos.map((t) =>
-          t.tempId == tempId
+      _tempPhotos = _tempPhotos
+          .map((t) => t.tempId == tempId
               ? TempPhoto(
                   tempId: t.tempId,
                   referenceAssetNo: referenceAssetNo,
@@ -228,7 +231,8 @@ class TempPhotoProvider with ChangeNotifier {
                   costCenterName: costCenterName,
                   status: t.status,
                 )
-              : t).toList();
+              : t)
+          .toList();
       _submitStatus = SubmitStatus.success;
       return true;
     } catch (e) {
@@ -242,7 +246,9 @@ class TempPhotoProvider with ChangeNotifier {
 
   Future<bool> deleteTempPhoto(String tempId) async {
     try {
-      try { await _storage.ref().child('$_storageTempPath/$tempId.jpg').delete(); } catch (_) {}
+      try {
+        await _storage.ref().child('$_storageTempPath/$tempId.jpg').delete();
+      } catch (_) {}
       await _db.collection(_collectionPath).doc(tempId).delete();
       _tempPhotos.removeWhere((t) => t.tempId == tempId);
       notifyListeners();

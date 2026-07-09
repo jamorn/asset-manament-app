@@ -6,9 +6,10 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../providers/asset_provider.dart';
 import '../providers/auth_provider.dart';
-import '../providers/theme_provider.dart'; // 🟢 เพิ่ม import theme_provider
+import '../providers/theme_provider.dart';
 import '../services/rbac_service.dart';
 import '../configs/routes.dart';
+import '../configs/constants.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -58,9 +59,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final assetProv = context.watch<AssetProvider>();
     final auth = context.watch<AuthProvider>();
-    final themeProvider = context.watch<ThemeProvider>(); // 🟢 เรียกใช้ watch เฝ้าดูสถานะธีม
+    final themeProvider =
+        context.watch<ThemeProvider>(); // 🟢 เรียกใช้ watch เฝ้าดูสถานะธีม
 
-        if (assetProv.loading && assetProv.assets.isEmpty) {
+    if (assetProv.loading && assetProv.assets.isEmpty) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
@@ -83,7 +85,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
-        // ใช้ Cache ป้องกัน CPU Overload ตอน Bulk Progress
+    // ใช้ Cache ป้องกัน CPU Overload ตอน Bulk Progress
     _calculateStatsIfNeeded(assetProv, auth);
 
     final remaining = assetProv.totalCount - assetProv.auditedCount;
@@ -119,8 +121,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               padding:
                   const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12),
               child: ElevatedButton.icon(
-                style:
-                    ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
                 icon: _isBulkAccepting
                     ? const SizedBox(
                         width: 14,
@@ -145,7 +146,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: () => assetProv.retry(),
           ),
-          
+
           // 🟢 เพิ่มส่วนประกอบ User Profile Dropdown Menu ให้มีพฤติกรรมเหมือนหน้าแรก
           PopupMenuButton<String>(
             onSelected: (route) {
@@ -155,7 +156,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Navigator.pushReplacementNamed(context, AppRoutes.search);
               } else if (route == 'toggle_theme') {
                 final theme = context.read<ThemeProvider>();
-                theme.setThemeMode(theme.isDarkMode ? ThemeMode.light : ThemeMode.dark);
+                theme.setThemeMode(
+                    theme.isDarkMode ? ThemeMode.light : ThemeMode.dark);
               } else if (route == 'logout') {
                 context.read<AuthProvider>().logout();
                 Navigator.of(context).popUntil((r) => r.isFirst);
@@ -172,7 +174,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: auth.user?.photoURL == null
                     ? Text(
                         (auth.user?.email ?? 'U')[0].toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold),
                       )
                     : null,
               ),
@@ -183,27 +188,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(auth.user?.displayName ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text(auth.user?.email ?? '', style: TextStyle(fontSize: 11, color: context.textSecondary)),
+                    Text(auth.user?.displayName ?? 'User',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text(auth.user?.email ?? '',
+                        style: TextStyle(
+                            fontSize: 11, color: context.textSecondary)),
                   ],
                 ),
               ),
               const PopupMenuDivider(),
-              const PopupMenuItem(value: 'home', child: Text('🏠 Home (Survey)')),
-              const PopupMenuItem(value: AppRoutes.search, child: Text('🔍 Search')),
+              const PopupMenuItem(
+                  value: 'home', child: Text('🏠 Home (Survey)')),
+              const PopupMenuItem(
+                  value: AppRoutes.search, child: Text('🔍 Search')),
               const PopupMenuDivider(),
               PopupMenuItem(
                 value: 'toggle_theme',
                 child: Row(
                   children: [
-                    Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode, size: 18),
+                    Icon(
+                        themeProvider.isDarkMode
+                            ? Icons.light_mode
+                            : Icons.dark_mode,
+                        size: 18),
                     const SizedBox(width: 8),
-                    Text(themeProvider.isDarkMode ? '☀️ Light mode' : '🌙 Dark mode'),
+                    Text(themeProvider.isDarkMode
+                        ? '☀️ Light mode'
+                        : '🌙 Dark mode'),
                   ],
                 ),
               ),
               const PopupMenuDivider(),
-              const PopupMenuItem(value: 'logout', child: Text('🚪 Sign out', style: TextStyle(color: Colors.red))),
+              const PopupMenuItem(
+                  value: 'logout',
+                  child:
+                      Text('🚪 Sign out', style: TextStyle(color: Colors.red))),
             ],
           ),
         ],
@@ -215,20 +235,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             _buildOverallSummaryCard(assetProv, remaining),
             const SizedBox(height: 20),
-
             const Text('ความคืบหน้าแยกตาม Cost Center',
-                style:
-                    TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-                        _buildCostCenterList(
+            _buildCostCenterList(
                 _cachedCostCenterStats ?? [], _cachedAssetClassStats ?? {}),
-
             const SizedBox(height: 24),
             Center(
               child: Text(
                 'ข้อมูล ณ เวลาที่โหลดหน้า · ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
-                style:
-                    TextStyle(fontSize: 10, color: context.textSecondary),
+                style: TextStyle(fontSize: 10, color: context.textSecondary),
               ),
             ),
           ],
@@ -242,8 +258,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ? provider.auditedCount / provider.totalCount
         : 0.0;
     return Card(
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -251,16 +266,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('ภาพรวมทั้งหมด',
-                style: TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatColumn(
                     'ทั้งหมด', provider.totalCount.toString(), Colors.blue),
-                _buildStatColumn('สำรวจแล้ว',
-                    provider.auditedCount.toString(), Colors.green),
+                _buildStatColumn('สำรวจแล้ว', provider.auditedCount.toString(),
+                    Colors.green),
                 _buildStatColumn(
                     'คงเหลือ', remaining.toString(), Colors.orange),
               ],
@@ -284,12 +298,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         Text(value,
             style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: color)),
+                fontSize: 22, fontWeight: FontWeight.bold, color: color)),
         Text(label,
-            style:
-                TextStyle(fontSize: 11, color: context.textSecondary)),
+            style: TextStyle(fontSize: 11, color: context.textSecondary)),
       ],
     );
   }
@@ -323,8 +334,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ListTile(
                 title: Text('${cc.costCenter} - ${cc.costCenterName}',
                     style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold)),
+                        fontSize: 12, fontWeight: FontWeight.bold)),
                 subtitle: Padding(
                   padding: const EdgeInsets.only(top: 4.0),
                   child: Text(
@@ -338,11 +348,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     SizedBox(
                       width: 60,
                       child: LinearProgressIndicator(
-                        value:
-                            cc.total > 0 ? (cc.audited / cc.total) : 0,
+                        value: cc.total > 0 ? (cc.audited / cc.total) : 0,
                         minHeight: 4,
                         color: Colors.green,
-                          backgroundColor: context.surfaceContainerHigh,
+                        backgroundColor: context.surfaceContainerHigh,
                       ),
                     ),
                     Icon(
@@ -355,23 +364,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 onTap: () {
                   setState(() {
-                    _expandedCostCenter =
-                        isExpanded ? null : cc.costCenter;
+                    _expandedCostCenter = isExpanded ? null : cc.costCenter;
                   });
                 },
               ),
               if (isExpanded)
                 Container(
-                  padding: const EdgeInsets.only(
-                      left: 24, right: 16, bottom: 12),
+                  padding:
+                      const EdgeInsets.only(left: 24, right: 16, bottom: 12),
                   color: Theme.of(context).brightness == Brightness.dark
                       ? context.surfaceDarkest
                       : context.surfaceSubtle,
                   child: Column(
                     children: [
                       ...acList.map((ac) => Padding(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 4.0),
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
                             child: Row(
                               children: [
                                 Expanded(
@@ -379,7 +386,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     '${ac.assetClass} · ${ac.assetClassName}',
                                     style: TextStyle(
                                         fontSize: 11,
-                                        color: Theme.of(context).brightness == Brightness.dark
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
                                             ? context.borderLight
                                             : context.textPrimary),
                                   ),
@@ -446,8 +454,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         for (final asset in chunk) {
           final logRef = firestore
-              .collection(
-                  'artifacts/irpc-asset-audit/public/data/assets')
+              .collection(FirestorePath.assets)
               .doc(asset.assetNo)
               .collection('audit_logs')
               .doc();
@@ -469,7 +476,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           _bulkProgress = successCount;
         });
-            }
+      }
 
       // รอให้ดึงข้อมูลจากเซิร์ฟเวอร์เสร็จก่อน
       await provider.retry();
@@ -485,8 +492,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('❌ เกิดข้อผิดพลาด: ${e.toString()}')),
+          SnackBar(content: Text('❌ เกิดข้อผิดพลาด: ${e.toString()}')),
         );
       }
     } finally {

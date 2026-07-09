@@ -11,9 +11,18 @@ class ConditionSelect extends StatelessWidget {
   // รายการสถานะมาตรฐานที่ถอดแบบมาจากระบบเดิม (constants.ts)
   static const List<Map<String, String>> conditionOptions = [
     {'value': 'ใช้งานปกติ (Normal)', 'label': 'ใช้งานปกติ (Normal)'},
-    {'value': 'ชำรุด/รอจำหน่าย (Damaged)', 'label': 'ชำรุด/รอจำหน่าย (Damaged)'},
-    {'value': 'รอซ่อมแซม (Pending Repair)', 'label': 'รอซ่อมแซม (Pending Repair)'},
-    {'value': 'ไม่พบตัวทรัพย์สิน (Missing)', 'label': 'ไม่พบตัวทรัพย์สิน (Missing)'},
+    {
+      'value': 'ชำรุด/รอจำหน่าย (Damaged)',
+      'label': 'ชำรุด/รอจำหน่าย (Damaged)'
+    },
+    {
+      'value': 'รอซ่อมแซม (Pending Repair)',
+      'label': 'รอซ่อมแซม (Pending Repair)'
+    },
+    {
+      'value': 'ไม่พบตัวทรัพย์สิน (Missing)',
+      'label': 'ไม่พบตัวทรัพย์สิน (Missing)'
+    },
   ];
 
   const ConditionSelect({
@@ -31,10 +40,11 @@ class ConditionSelect extends StatelessWidget {
       children: [
         const Text(
           'REMARK / CONDITION',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber),
+          style: TextStyle(
+              fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber),
         ),
         const SizedBox(height: 6),
-        
+
         // Dropdown เลือกสถานะหลัก
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -45,7 +55,11 @@ class ConditionSelect extends StatelessWidget {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: value.isEmpty ? null : (conditionOptions.any((o) => o['value'] == value) ? value : 'custom'),
+              value: value.isEmpty
+                  ? null
+                  : (conditionOptions.any((o) => o['value'] == value)
+                      ? value
+                      : 'custom'),
               hint: const Text('-- เลือกสถานะ --'),
               isExpanded: true,
               onChanged: (val) {
@@ -55,20 +69,24 @@ class ConditionSelect extends StatelessWidget {
                 ...conditionOptions.map((opt) {
                   return DropdownMenuItem<String>(
                     value: opt['value'],
-                    child: Text(opt['label']!, style: const TextStyle(fontSize: 14)),
+                    child: Text(opt['label']!,
+                        style: const TextStyle(fontSize: 14)),
                   );
                 }).toList(),
                 const DropdownMenuItem<String>(
                   value: 'custom',
-                  child: Text('ระบุรายละเอียดเอง...', style: TextStyle(fontSize: 14)),
+                  child: Text('ระบุรายละเอียดเอง...',
+                      style: TextStyle(fontSize: 14)),
                 ),
               ],
             ),
           ),
         ),
-        
+
         // แสดงกล่องข้อความเมื่อเลือก "ระบุรายละเอียดเอง..."
-        if (value == 'custom' || (!conditionOptions.any((o) => o['value'] == value) && value.isNotEmpty)) ...[
+        if (value == 'custom' ||
+            (!conditionOptions.any((o) => o['value'] == value) &&
+                value.isNotEmpty)) ...[
           const SizedBox(height: 8),
           TextField(
             controller: TextEditingController.fromValue(
@@ -80,7 +98,8 @@ class ConditionSelect extends StatelessWidget {
             onChanged: onCustomChange,
             decoration: InputDecoration(
               hintText: 'พิมพ์รายละเอียดเพิ่มเติม...',
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               filled: true,
               fillColor: Theme.of(context).cardColor,
               border: OutlineInputBorder(

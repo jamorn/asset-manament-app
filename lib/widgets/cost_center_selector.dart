@@ -20,15 +20,19 @@ class CostCenterSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalAssets = costCenters.fold<int>(0, (sum, item) => sum + item.count);
+    final totalAssets =
+        costCenters.fold<int>(0, (sum, item) => sum + item.count);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'SELECT COST CENTER',
-
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: context.primary, letterSpacing: 0.5),
+          style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: context.primary,
+              letterSpacing: 0.5),
         ),
         const SizedBox(height: 2),
         Text(
@@ -36,7 +40,6 @@ class CostCenterSelector extends StatelessWidget {
           style: TextStyle(fontSize: 10, color: context.textSecondary),
         ),
         const SizedBox(height: 8),
-        
         Wrap(
           spacing: 8.0,
           runSpacing: 8.0,
@@ -46,12 +49,17 @@ class CostCenterSelector extends StatelessWidget {
                 onTap: () => onSelect(null),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color: selectedCostCenter == null ? context.primary : context.surfaceCard,
+                    color: selectedCostCenter == null
+                        ? context.primary
+                        : context.surfaceCard,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: selectedCostCenter == null ? context.primary : context.borderLight,
+                      color: selectedCostCenter == null
+                          ? context.primary
+                          : context.borderLight,
                       width: 2,
                     ),
                   ),
@@ -59,12 +67,13 @@ class CostCenterSelector extends StatelessWidget {
                     'All ($totalAssets)',
                     style: TextStyle(
                       fontSize: 13,
-                      color: selectedCostCenter == null ? context.onPrimary : context.textPrimary,
+                      color: selectedCostCenter == null
+                          ? context.onPrimary
+                          : context.textPrimary,
                     ),
                   ),
                 ),
               ),
-
             ...costCenters.map((cc) {
               final audited = auditedCounts[cc.costCenter] ?? 0;
               final remaining = cc.count - audited;
@@ -84,7 +93,12 @@ class CostCenterSelector extends StatelessWidget {
                       width: 2,
                     ),
                     boxShadow: isSelected
-                        ? [BoxShadow(color: context.primary.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2))]
+                        ? [
+                            BoxShadow(
+                                color: context.primary.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2))
+                          ]
                         : null,
                   ),
                   child: Column(
@@ -96,7 +110,9 @@ class CostCenterSelector extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? context.onPrimary : context.textPrimary,
+                          color: isSelected
+                              ? context.onPrimary
+                              : context.textPrimary,
                         ),
                       ),
                       Text(
@@ -105,7 +121,9 @@ class CostCenterSelector extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 9,
-                          color: isSelected ? context.onPrimary.withOpacity(0.7) : context.textSecondary,
+                          color: isSelected
+                              ? context.onPrimary.withOpacity(0.7)
+                              : context.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -116,7 +134,9 @@ class CostCenterSelector extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           color: isSelected
                               ? context.onPrimary.withOpacity(0.8)
-                              : (remaining > 0 ? Colors.orange.shade700 : Colors.green.shade700),
+                              : (remaining > 0
+                                  ? Colors.orange.shade700
+                                  : Colors.green.shade700),
                         ),
                       ),
                     ],

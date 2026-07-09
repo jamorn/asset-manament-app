@@ -84,8 +84,14 @@ class ImagePickerUtil {
       }
       // PNG
       if (bytes.length > 24 && bytes[0] == 0x89 && bytes[1] == 0x50) {
-        final w = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
-        final h = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
+        final w = (bytes[16] << 24) |
+            (bytes[17] << 16) |
+            (bytes[18] << 8) |
+            bytes[19];
+        final h = (bytes[20] << 24) |
+            (bytes[21] << 16) |
+            (bytes[22] << 8) |
+            bytes[23];
         return {'width': w, 'height': h};
       }
     } catch (_) {}

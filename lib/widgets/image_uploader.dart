@@ -4,11 +4,12 @@ import '../config/theme.dart';
 import 'dart:io';
 
 class ImageUploader extends StatelessWidget {
-  final File? pickedImage;            // รูปภาพใหม่ที่เพิ่งเลือก/ถ่ายสด
-  final String? existingImageUrl;     // URL ของรูปภาพเดิมที่มีอยู่ในระบบ (ถ้ามี)
-  final Map<String, dynamic>? fileMeta; // Metadata ของภาพ (ความกว้าง, สูง, ขนาดไฟล์)
-  final VoidCallback onTapUpload;     // แอ็กชันเมื่อกดปุ่มเลือกรูปภาพ/เปิดกล้อง
-  final VoidCallback onClear;         // แอ็กชันเมื่อกดลบรูปภาพเพื่อเลือกใหม่
+  final File? pickedImage; // รูปภาพใหม่ที่เพิ่งเลือก/ถ่ายสด
+  final String? existingImageUrl; // URL ของรูปภาพเดิมที่มีอยู่ในระบบ (ถ้ามี)
+  final Map<String, dynamic>?
+      fileMeta; // Metadata ของภาพ (ความกว้าง, สูง, ขนาดไฟล์)
+  final VoidCallback onTapUpload; // แอ็กชันเมื่อกดปุ่มเลือกรูปภาพ/เปิดกล้อง
+  final VoidCallback onClear; // แอ็กชันเมื่อกดลบรูปภาพเพื่อเลือกใหม่
 
   const ImageUploader({
     Key? key,
@@ -21,7 +22,8 @@ class ImageUploader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool hasExistingPhoto = existingImageUrl != null && existingImageUrl!.isNotEmpty;
+    bool hasExistingPhoto =
+        existingImageUrl != null && existingImageUrl!.isNotEmpty;
     bool showPreview = pickedImage != null;
 
     return Column(
@@ -32,7 +34,10 @@ class ImageUploader extends StatelessWidget {
           children: [
             Text(
               'EVIDENCE PHOTO',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: context.primary),
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: context.primary),
             ),
             if (hasExistingPhoto) ...[
               const SizedBox(width: 6),
@@ -50,7 +55,8 @@ class ImageUploader extends StatelessWidget {
           Stack(
             children: [
               GestureDetector(
-                onTap: onTapUpload, // กดที่รูปเดิมเพื่อเปิดกล้อง/คลังภาพเปลี่ยนรูปใหม่ได้เลย
+                onTap:
+                    onTapUpload, // กดที่รูปเดิมเพื่อเปิดกล้อง/คลังภาพเปลี่ยนรูปใหม่ได้เลย
                 child: Container(
                   width: double.infinity,
                   height: 200,
@@ -64,7 +70,8 @@ class ImageUploader extends StatelessWidget {
                       existingImageUrl!,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        return const Center(child: Text('⚠️ ไม่สามารถโหลดรูปภาพเดิมได้'));
+                        return const Center(
+                            child: Text('⚠️ ไม่สามารถโหลดรูปภาพเดิมได้'));
                       },
                     ),
                   ),
@@ -75,14 +82,18 @@ class ImageUploader extends StatelessWidget {
                 bottom: 8,
                 left: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     '📸 ภาพปัจจุบันในระบบ',
-                    style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -98,9 +109,13 @@ class ImageUploader extends StatelessWidget {
               width: double.infinity,
               height: 140,
               decoration: BoxDecoration(
-                color: Colors.amber.shade50.withOpacity(0.4), // ใช้โทนสี Accent อ่อนๆ ตามสไตล์ต้นฉบับ
+                color: Colors.amber.shade50
+                    .withOpacity(0.4), // ใช้โทนสี Accent อ่อนๆ ตามสไตล์ต้นฉบับ
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.amber.shade300, width: 2, style: BorderStyle.solid), // ดีไซน์ Border
+                border: Border.all(
+                    color: Colors.amber.shade300,
+                    width: 2,
+                    style: BorderStyle.solid), // ดีไซน์ Border
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -109,12 +124,17 @@ class ImageUploader extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'TOUCH TO SCAN / SNAP',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber),
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '(Optional)',
-                    style: TextStyle(fontSize: 9, color: Colors.amber.shade700.withOpacity(0.6)),
+                    style: TextStyle(
+                        fontSize: 9,
+                        color: Colors.amber.shade700.withOpacity(0.6)),
                   ),
                 ],
               ),
@@ -127,22 +147,20 @@ class ImageUploader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Stack(
-                
                 children: [
                   Container(
                     width: double.infinity,
                     height: 200,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.amber, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        )
-                      ]
-                    ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.amber, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          )
+                        ]),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(14),
                       child: Image.file(
@@ -166,14 +184,15 @@ class ImageUploader extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               // แสดง Image Meta Data ด้านล่างขวา (กว้างxสูง · ขนาดไฟล์ KB) ถ้าส่งมาให้
               if (fileMeta != null) ...[
                 Padding(
                   padding: const EdgeInsets.only(top: 4, right: 4),
                   child: Text(
                     '${fileMeta!['width']}×${fileMeta!['height']} · ${(fileMeta!['size'] / 1024).toStringAsFixed(1)} KB',
-                    style: TextStyle(fontSize: 10, color: context.textSecondary),
+                    style:
+                        TextStyle(fontSize: 10, color: context.textSecondary),
                   ),
                 ),
               ],

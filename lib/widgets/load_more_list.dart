@@ -58,18 +58,18 @@ class _LoadMoreListState extends State<LoadMoreList> {
       children: [
         // ❌ เอา Expanded + SingleChildScrollView ออก
         Card(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
-              clipBehavior: Clip.antiAlias,
-              elevation: 1,
-              child: AssetTableList(
-                assets: visibleAssets,
-                selectedAssetNo: widget.selectedAssetNo,
-                onSelect: widget.onSelect,
-                onImageClick: widget.onImageClick,
-                auditedSet: widget.auditedSet,
-              ),
-            ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          clipBehavior: Clip.antiAlias,
+          elevation: 1,
+          child: AssetTableList(
+            assets: visibleAssets,
+            selectedAssetNo: widget.selectedAssetNo,
+            onSelect: widget.onSelect,
+            onImageClick: widget.onImageClick,
+            auditedSet: widget.auditedSet,
+          ),
+        ),
         if (hasMore)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -93,10 +93,10 @@ class _LoadMoreListState extends State<LoadMoreList> {
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     fontSize: 13,
+                  ),
                 ),
               ),
             ),
-          ),
           ),
       ],
     );

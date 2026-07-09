@@ -37,10 +37,13 @@ class AssetClassPicker extends StatelessWidget {
       children: [
         const Text(
           'SELECT ASSET CLASS',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber, letterSpacing: 0.5),
+          style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.amber,
+              letterSpacing: 0.5),
         ),
         const SizedBox(height: 8),
-        
         Wrap(
           spacing: 8.0,
           runSpacing: 8.0,
@@ -50,13 +53,17 @@ class AssetClassPicker extends StatelessWidget {
               onTap: () => onSelect(null),
               borderRadius: BorderRadius.circular(12),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-
-                  color: selectedClass == null ? Colors.amber.shade800 : context.surfaceCard,
+                  color: selectedClass == null
+                      ? Colors.amber.shade800
+                      : context.surfaceCard,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: selectedClass == null ? Colors.amber.shade800 : context.borderLight,
+                    color: selectedClass == null
+                        ? Colors.amber.shade800
+                        : context.borderLight,
                     width: 2,
                   ),
                 ),
@@ -65,7 +72,9 @@ class AssetClassPicker extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: selectedClass == null ? Colors.white : context.textSecondary,
+                    color: selectedClass == null
+                        ? Colors.white
+                        : context.textSecondary,
                   ),
                 ),
               ),
@@ -81,19 +90,31 @@ class AssetClassPicker extends StatelessWidget {
                 onTap: () => onSelect(ac.assetClass),
                 borderRadius: BorderRadius.circular(12),
                 child: Opacity(
-                  opacity: remaining == 0 ? 0.6 : 1.0, // ถ้าทำครบแล้วจะจางลงเล็กน้อยตาม UI ต้นฉบับ
+                  opacity: remaining == 0
+                      ? 0.6
+                      : 1.0, // ถ้าทำครบแล้วจะจางลงเล็กน้อยตาม UI ต้นฉบับ
                   child: Container(
                     constraints: const BoxConstraints(minWidth: 100),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.amber.shade800 : context.surfaceCard,
+                      color: isSelected
+                          ? Colors.amber.shade800
+                          : context.surfaceCard,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? Colors.amber.shade800 : context.borderLight,
+                        color: isSelected
+                            ? Colors.amber.shade800
+                            : context.borderLight,
                         width: 2,
                       ),
                       boxShadow: isSelected
-                          ? [BoxShadow(color: Colors.amber.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2))]
+                          ? [
+                              BoxShadow(
+                                  color: Colors.amber.withOpacity(0.2),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2))
+                            ]
                           : null,
                     ),
                     child: Column(
@@ -105,7 +126,8 @@ class AssetClassPicker extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : context.textPrimary,
+                            color:
+                                isSelected ? Colors.white : context.textPrimary,
                           ),
                         ),
                         Text(
@@ -113,7 +135,9 @@ class AssetClassPicker extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: isSelected ? Colors.white.withOpacity(0.7) : context.textSecondary,
+                            color: isSelected
+                                ? Colors.white.withOpacity(0.7)
+                                : context.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -122,8 +146,8 @@ class AssetClassPicker extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
-                            color: isSelected 
-                                ? Colors.white.withOpacity(0.9) 
+                            color: isSelected
+                                ? Colors.white.withOpacity(0.9)
                                 : Colors.green.shade700,
                           ),
                         ),

@@ -37,14 +37,17 @@ class TempPhoto {
       description: map['description'] ?? '',
       photoUrl: map['photoUrl'] ?? '',
       location: map['location'] ?? '',
-      capturedAt: map['capturedAt'] != null 
-          ? (map['capturedAt'] as DateTime) // หรือดึงผ่าน Timestamp.toDate() ใน Cloud Firestore
+      capturedAt: map['capturedAt'] != null
+          ? (map['capturedAt']
+              as DateTime) // หรือดึงผ่าน Timestamp.toDate() ใน Cloud Firestore
           : null,
       assetClass: map['assetClass'] ?? '',
       assetClassName: map['assetClassName'] ?? '',
       costCenter: map['costCenter'] ?? '',
       costCenterName: map['costCenterName'] ?? '',
-      status: map['status'] == 'merged' ? TempPhotoStatus.merged : TempPhotoStatus.pending,
+      status: map['status'] == 'merged'
+          ? TempPhotoStatus.merged
+          : TempPhotoStatus.pending,
     );
   }
 
@@ -60,7 +63,7 @@ class TempPhoto {
       'assetClassName': assetClassName,
       'costCenter': costCenter,
       'costCenterName': costCenterName,
-            'status': status == TempPhotoStatus.merged ? 'merged' : 'pending',
+      'status': status == TempPhotoStatus.merged ? 'merged' : 'pending',
     };
   }
 

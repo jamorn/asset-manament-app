@@ -20,7 +20,8 @@ void showTempPhotoAcceptModal({
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Text('✅ ผูกเลขครุภัณฑ์ใหม่ (${tempPhoto.tempId})'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -35,13 +36,15 @@ void showTempPhotoAcceptModal({
                 ),
                 if (errorMessage != null) ...[
                   const SizedBox(height: 10),
-                  Text(errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                  Text(errorMessage!,
+                      style: const TextStyle(color: Colors.red, fontSize: 13)),
                 ]
               ],
             ),
             actions: [
               TextButton(
-                child: const Text('✕ CLOSE', style: TextStyle(color: Colors.red)),
+                child:
+                    const Text('✕ CLOSE', style: TextStyle(color: Colors.red)),
                 onPressed: isSubmitting ? null : () => Navigator.of(ctx).pop(),
               ),
               ElevatedButton(
@@ -54,7 +57,8 @@ void showTempPhotoAcceptModal({
                         });
 
                         // 1. ตรวจสอบเงื่อนไขผ่าน Validator คลาสที่เราสร้างไว้
-                        final validation = TempPhotoValidator.validateAssetNo(assetNoInput);
+                        final validation =
+                            TempPhotoValidator.validateAssetNo(assetNoInput);
                         if (!validation.ok) {
                           setState(() => errorMessage = validation.message);
                           return;
@@ -72,8 +76,13 @@ void showTempPhotoAcceptModal({
                         }
                       },
                 child: isSubmitting
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('✅ ACCEPT & CREATE', style: TextStyle(color: Colors.white)),
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    : const Text('✅ ACCEPT & CREATE',
+                        style: TextStyle(color: Colors.white)),
               ),
             ],
           );

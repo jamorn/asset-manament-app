@@ -64,7 +64,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '488926667242',
     projectId: 'asset-audit-95195',
     storageBucket: 'asset-audit-95195.firebasestorage.app',
-    iosClientId: '488926667242-e7v8hmvb7j1o5rpos7tpqrpoclfipqhj.apps.googleusercontent.com',
+    iosClientId:
+        '488926667242-e7v8hmvb7j1o5rpos7tpqrpoclfipqhj.apps.googleusercontent.com',
     iosBundleId: 'com.irpc.assetApp',
   );
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +74,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '488926667242',
     projectId: 'asset-audit-95195',
     storageBucket: 'asset-audit-95195.firebasestorage.app',
-    iosClientId: '488926667242-e7v8hmvb7j1o5rpos7tpqrpoclfipqhj.apps.googleusercontent.com',
+    iosClientId:
+        '488926667242-e7v8hmvb7j1o5rpos7tpqrpoclfipqhj.apps.googleusercontent.com',
     iosBundleId: 'com.irpc.assetApp',
   );
 

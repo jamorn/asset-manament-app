@@ -56,6 +56,13 @@ class _AuditFormState extends State<AuditForm> {
   }
 
   @override
+  void dispose() {
+    _locationController.dispose();
+    _remarksController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(covariant AuditForm oldWidget) {
     super.didUpdateWidget(oldWidget);
     // รีเซ็ตค่าฟอร์มบางส่วนเมื่อผู้ใช้เปลี่ยนไปเลือกครุภัณฑ์ตัวใหม่
@@ -177,135 +184,135 @@ class _AuditFormState extends State<AuditForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-                  // ──────────────────────────────────────────
-                  // 🏷️ Asset Info Card (แสดงข้อมูลครุภัณฑ์ที่เลือก)
-                  // ──────────────────────────────────────────
-                  if (widget.selectedAsset != null)
-                    Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: context.surfaceCard,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: context.borderLight),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.selectedAsset!.description.isNotEmpty
-                                ? widget.selectedAsset!.description
-                                : '(No Description)',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'เลขครุภัณฑ์: ${widget.selectedAsset!.assetNo}',
-                            style: TextStyle(
-                              color: context.textSecondary,
-                              fontSize: 13,
-                            ),
-                          ),
-                          if (widget.selectedAsset!.costCenterName.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'หน่วยงาน: ${widget.selectedAsset!.costCenterName}',
-                                style: TextStyle(
-                                  color: context.textSecondary,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-
-                  // ──────────────────────────────────────────
-                  // 🌳 Environment (INDOOR / OUTDOOR)
-                  // ──────────────────────────────────────────
-                  Text('ENVIRONMENT',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: context.textSecondary)),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      _buildToggleChip(
-                        label: '🏠 INDOOR',
-                        value: 'indoor',
-                        groupValue: _selectedEnvironment,
-                        onSelected: (v) => setState(() => _selectedEnvironment = v),
-                      ),
-                      const SizedBox(width: 12),
-                      _buildToggleChip(
-                        label: '🌳 OUTDOOR',
-                        value: 'outdoor',
-                        groupValue: _selectedEnvironment,
-                        onSelected: (v) => setState(() => _selectedEnvironment = v),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // ──────────────────────────────────────────
-                  // 🚚 Mobility (FIXED / PORTABLE)
-                  // ──────────────────────────────────────────
-                  Text('MOBILITY',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: context.textSecondary)),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      _buildToggleChip(
-                        label: '📌 FIXED',
-                        value: 'fixed',
-                        groupValue: _selectedMobility,
-                        onSelected: (v) => setState(() => _selectedMobility = v),
-                      ),
-                      const SizedBox(width: 12),
-                      _buildToggleChip(
-                        label: '🔄 PORTABLE',
-                        value: 'portable',
-                        groupValue: _selectedMobility,
-                        onSelected: (v) => setState(() => _selectedMobility = v),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // ──────────────────────────────────────────
-                  // 📝 Remarks (หมายเหตุเพิ่มเติม)
-                  // ──────────────────────────────────────────
-                  Text('REMARKS',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: context.textSecondary)),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: _remarksController,
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      hintText: 'หมายเหตุเพิ่มเติม (ถ้ามี) ...',
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      filled: true,
-                      fillColor: Theme.of(context).cardColor,
-                      border:
-                          OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          // ──────────────────────────────────────────
+          // 🏷️ Asset Info Card (แสดงข้อมูลครุภัณฑ์ที่เลือก)
+          // ──────────────────────────────────────────
+          if (widget.selectedAsset != null)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.surfaceCard,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.borderLight),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.selectedAsset!.description.isNotEmpty
+                        ? widget.selectedAsset!.description
+                        : '(No Description)',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 6),
+                  Text(
+                    'เลขครุภัณฑ์: ${widget.selectedAsset!.assetNo}',
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                  if (widget.selectedAsset!.costCenterName.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        'หน่วยงาน: ${widget.selectedAsset!.costCenterName}',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
 
-                  // 📍 ส่วนระบุสถานที่จัดวางครุภัณฑ์
+          // ──────────────────────────────────────────
+          // 🌳 Environment (INDOOR / OUTDOOR)
+          // ──────────────────────────────────────────
+          Text('ENVIRONMENT',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: context.textSecondary)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              _buildToggleChip(
+                label: '🏠 INDOOR',
+                value: 'indoor',
+                groupValue: _selectedEnvironment,
+                onSelected: (v) => setState(() => _selectedEnvironment = v),
+              ),
+              const SizedBox(width: 12),
+              _buildToggleChip(
+                label: '🌳 OUTDOOR',
+                value: 'outdoor',
+                groupValue: _selectedEnvironment,
+                onSelected: (v) => setState(() => _selectedEnvironment = v),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // ──────────────────────────────────────────
+          // 🚚 Mobility (FIXED / PORTABLE)
+          // ──────────────────────────────────────────
+          Text('MOBILITY',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: context.textSecondary)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              _buildToggleChip(
+                label: '📌 FIXED',
+                value: 'fixed',
+                groupValue: _selectedMobility,
+                onSelected: (v) => setState(() => _selectedMobility = v),
+              ),
+              const SizedBox(width: 12),
+              _buildToggleChip(
+                label: '🔄 PORTABLE',
+                value: 'portable',
+                groupValue: _selectedMobility,
+                onSelected: (v) => setState(() => _selectedMobility = v),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // ──────────────────────────────────────────
+          // 📝 Remarks (หมายเหตุเพิ่มเติม)
+          // ──────────────────────────────────────────
+          Text('REMARKS',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: context.textSecondary)),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _remarksController,
+            maxLines: 2,
+            decoration: InputDecoration(
+              hintText: 'หมายเหตุเพิ่มเติม (ถ้ามี) ...',
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              filled: true,
+              fillColor: Theme.of(context).cardColor,
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // 📍 ส่วนระบุสถานที่จัดวางครุภัณฑ์
           Text('LOCATION NAME',
               style: TextStyle(
                   fontSize: 12,
@@ -491,7 +498,7 @@ class _AuditFormState extends State<AuditForm> {
     );
   }
 
-    // ────────────────────────────────────────
+  // ────────────────────────────────────────
   // 🏷️ Helper: _buildToggleChip สำหรับ Environment / Mobility
   // ────────────────────────────────────────
   Widget _buildToggleChip({

@@ -26,7 +26,8 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final assetProv = context.watch<AssetProvider>();
-    final themeProvider = context.watch<ThemeProvider>(); // 🟢 เรียกใช้ watch เฝ้าดูสถานะธีม
+    final themeProvider =
+        context.watch<ThemeProvider>(); // 🟢 เรียกใช้ watch เฝ้าดูสถานะธีม
 
     // Public route — skip RBAC filter (skipFilter = true)
     final allowedCostCenters = AppRoutes.getAllowedCostCenters(
@@ -47,16 +48,17 @@ class _SearchScreenState extends State<SearchScreen> {
     var filteredAssets = visibleAssets;
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toUpperCase();
-      filteredAssets = visibleAssets.where((a) =>
-        a.assetNo.toUpperCase().contains(q) ||
-        a.description.toUpperCase().contains(q) ||
-        a.lastLocationName.toUpperCase().contains(q) ||
-        a.mainLocation.toUpperCase().contains(q) ||
-        a.costCenter.toUpperCase().contains(q) ||
-        a.costCenterName.toUpperCase().contains(q) ||
-        a.assetOwner.toUpperCase().contains(q) ||
-        (a.remarks?.toUpperCase() ?? '').contains(q)
-      ).toList();
+      filteredAssets = visibleAssets
+          .where((a) =>
+              a.assetNo.toUpperCase().contains(q) ||
+              a.description.toUpperCase().contains(q) ||
+              a.lastLocationName.toUpperCase().contains(q) ||
+              a.mainLocation.toUpperCase().contains(q) ||
+              a.costCenter.toUpperCase().contains(q) ||
+              a.costCenterName.toUpperCase().contains(q) ||
+              a.assetOwner.toUpperCase().contains(q) ||
+              (a.remarks?.toUpperCase() ?? '').contains(q))
+          .toList();
     }
 
     return Scaffold(
@@ -69,9 +71,11 @@ class _SearchScreenState extends State<SearchScreen> {
                 Navigator.pushNamed(context, AppRoutes.dashboard);
               } else if (route == 'home') {
                 Navigator.pop(context);
-              } else if (route == 'toggle_theme') { // 🟢 ดักฟังคำสั่งกดสลับธีมสี
+              } else if (route == 'toggle_theme') {
+                // 🟢 ดักฟังคำสั่งกดสลับธีมสี
                 final theme = context.read<ThemeProvider>();
-                theme.setThemeMode(theme.isDarkMode ? ThemeMode.light : ThemeMode.dark);
+                theme.setThemeMode(
+                    theme.isDarkMode ? ThemeMode.light : ThemeMode.dark);
               } else if (route == 'logout') {
                 await context.read<AuthProvider>().logout();
               }
@@ -87,7 +91,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 child: auth.user?.photoURL == null
                     ? Text(
                         (auth.user?.email ?? 'U')[0].toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold),
                       )
                     : null,
               ),
@@ -98,27 +105,43 @@ class _SearchScreenState extends State<SearchScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(auth.user?.displayName ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text(auth.user?.email ?? '', style: TextStyle(fontSize: 11, color: context.textSecondary)),
+                    Text(auth.user?.displayName ?? 'User',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text(auth.user?.email ?? '',
+                        style: TextStyle(
+                            fontSize: 11, color: context.textSecondary)),
                   ],
                 ),
               ),
               const PopupMenuDivider(),
-              const PopupMenuItem(value: 'home', child: Text('🏠 Home (Survey)')),
-              const PopupMenuItem(value: AppRoutes.dashboard, child: Text('📊 Dashboard')),
+              const PopupMenuItem(
+                  value: 'home', child: Text('🏠 Home (Survey)')),
+              const PopupMenuItem(
+                  value: AppRoutes.dashboard, child: Text('📊 Dashboard')),
               const PopupMenuDivider(),
-              PopupMenuItem( // 🟢 เพิ่มปุ่มสลับธีมสีเข้าไปในหน้าค้นหาทรัพย์สิน
+              PopupMenuItem(
+                // 🟢 เพิ่มปุ่มสลับธีมสีเข้าไปในหน้าค้นหาทรัพย์สิน
                 value: 'toggle_theme',
                 child: Row(
                   children: [
-                    Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode, size: 18),
+                    Icon(
+                        themeProvider.isDarkMode
+                            ? Icons.light_mode
+                            : Icons.dark_mode,
+                        size: 18),
                     const SizedBox(width: 8),
-                    Text(themeProvider.isDarkMode ? '☀️ Light mode' : '🌙 Dark mode'),
+                    Text(themeProvider.isDarkMode
+                        ? '☀️ Light mode'
+                        : '🌙 Dark mode'),
                   ],
                 ),
               ),
               const PopupMenuDivider(),
-              const PopupMenuItem(value: 'logout', child: Text('🚪 Sign out', style: TextStyle(color: Colors.red))),
+              const PopupMenuItem(
+                  value: 'logout',
+                  child:
+                      Text('🚪 Sign out', style: TextStyle(color: Colors.red))),
             ],
           ),
         ],
@@ -139,7 +162,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: SingleChildScrollView( 
+              child: SingleChildScrollView(
                 child: LoadMoreList(
                   assets: filteredAssets,
                   selectedAssetNo: null,
@@ -163,15 +186,17 @@ class _SearchScreenState extends State<SearchScreen> {
   void _showAssetDetail(BuildContext context, AssetModel asset) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, 
+      isScrollControlled: true,
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView( 
+        child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(asset.assetNo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(asset.assetNo,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Text(asset.description),
               const SizedBox(height: 4),
@@ -182,7 +207,8 @@ class _SearchScreenState extends State<SearchScreen> {
                 const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(asset.lastImageUrl, height: 150, fit: BoxFit.cover),
+                  child: Image.network(asset.lastImageUrl,
+                      height: 150, fit: BoxFit.cover),
                 ),
               ],
             ],

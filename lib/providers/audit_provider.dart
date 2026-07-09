@@ -1,3 +1,4 @@
+import '../configs/constants.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -31,13 +32,15 @@ class AuditProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final String imageName = '${asset.assetNo}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final storageRef = _storage.ref().child('artifacts/irpc-asset-audit/audit_photos/$imageName');
+      final String imageName =
+          '${asset.assetNo}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final storageRef =
+          _storage.ref().child('${FirestorePath.auditPhotos}/$imageName');
       await storageRef.putFile(imageFile);
       final String imageUrl = await storageRef.getDownloadURL();
 
       final docRef = _db
-          .collection('artifacts/irpc-asset-audit/public/data/assets')
+          .collection(FirestorePath.assets)
           .doc(asset.assetNo)
           .collection('audit_logs')
           .doc();
@@ -80,7 +83,7 @@ class AuditProvider with ChangeNotifier {
       }
 
       await _db
-          .collection('artifacts/irpc-asset-audit/public/data/assets')
+          .collection(FirestorePath.assets)
           .doc(asset.assetNo)
           .update(updateData);
 

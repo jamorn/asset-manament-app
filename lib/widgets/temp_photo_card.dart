@@ -41,11 +41,12 @@ class TempPhotoCard extends StatelessWidget {
                         height: 64,
                         fit: BoxFit.cover,
                       )
-                    : Container(width: 64, height: 64, color: context.borderLight),
+                    : Container(
+                        width: 64, height: 64, color: context.borderLight),
               ),
             ),
             const SizedBox(width: 12),
-            
+
             // Content Info
             Expanded(
               child: Column(
@@ -53,11 +54,15 @@ class TempPhotoCard extends StatelessWidget {
                 children: [
                   Text(
                     tempPhoto.tempId,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 10),
                   ),
                   Text(
                     'Ref: ${tempPhoto.referenceAssetNo}',
-                    style: const TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        color: Colors.blue,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600),
                   ),
                   Text(
                     tempPhoto.description,
@@ -72,7 +77,8 @@ class TempPhotoCard extends StatelessWidget {
             // Action Buttons (เทียบเท่าปุ่ม Action ท้ายการ์ด)
             Column(
               children: [
-                if (tempPhoto.status == TempPhotoStatus.pending && onAccept != null)
+                if (tempPhoto.status == TempPhotoStatus.pending &&
+                    onAccept != null)
                   IconButton(
                     icon: const Text('✅', style: TextStyle(fontSize: 14)),
                     onPressed: onAccept,

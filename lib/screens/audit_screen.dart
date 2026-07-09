@@ -31,7 +31,8 @@ class AuditScreen extends StatelessWidget {
         child: AuditForm(
           selectedAsset: asset,
           isSubmitting: auditProv.submitStatus == SubmitStatus.submitting,
-          onSubmit: (data) => _handleSubmit(context, assetProv, auditProv, data),
+          onSubmit: (data) =>
+              _handleSubmit(context, assetProv, auditProv, data),
         ),
       ),
     );

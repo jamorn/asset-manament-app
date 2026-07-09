@@ -30,7 +30,8 @@ class AssetApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()), // 🟢 เพิ่ม ThemeProvider
+        ChangeNotifierProvider(
+            create: (_) => ThemeProvider()), // 🟢 เพิ่ม ThemeProvider
         ChangeNotifierProxyProvider<AuthProvider, AssetProvider>(
           create: (_) => AssetProvider(),
           update: (_, auth, prev) =>
@@ -43,14 +44,16 @@ class AssetApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => AuditProvider()),
       ],
-      child: Consumer2<AuthProvider, ThemeProvider>( // 🟢 เปลี่ยนเป็น Consumer2 เพื่อฟังค่าจาก ThemeProvider ด้วย
+      child: Consumer2<AuthProvider, ThemeProvider>(
+        // 🟢 เปลี่ยนเป็น Consumer2 เพื่อฟังค่าจาก ThemeProvider ด้วย
         builder: (context, auth, themeProvider, _) {
           return MaterialApp(
             title: 'Asset Survey',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
-            themeMode: themeProvider.themeMode, // 🟢 ผูกตัวแปรควบคุมโหมดสีของระบบ
+            themeMode:
+                themeProvider.themeMode, // 🟢 ผูกตัวแปรควบคุมโหมดสีของระบบ
             initialRoute: AppRoutes.survey,
             routes: {
               AppRoutes.survey: (_) => const HomeScreen(),
