@@ -59,51 +59,71 @@ flutter run -d macos
 
 ```
 lib/
-├── main.dart                   # จุดเริ่มต้นแอป + Provider setup
-├── firebase_options.dart       # Firebase config (สร้างโดย flutterfire configure)
+├── main.dart                       # จุดเริ่มต้นแอป + Provider setup
+├── firebase_options.dart           # Firebase config (สร้างโดย flutterfire configure)
+│
 ├── config/
-│   └── theme.dart              # Light/Dark Theme + ColorScheme
+│   └── theme.dart                  # Light/Dark Theme + ColorScheme extensions
+│
 ├── configs/
-│   ├── constants.dart          # Firestore collection path constants
-│   └── routes.dart             # Route policy + RBAC rule engine
+│   ├── constants.dart              # Firestore collection path constants
+│   ├── default_values.dart         # ค่าเริ่มต้นสำหรับ Asset field
+│   └── routes.dart                 # Route policy + RBAC rule engine
+│
+├── mappers/
+│   └── asset_mapper.dart           # Map Firestore ↔ AssetModel (toJson/fromJson)
+│
 ├── models/
-│   ├── asset_model.dart        # Asset data model
-│   └── temp_photo_model.dart   # TempPhoto model
+│   ├── asset_model.dart            # Asset data model (Equatable)
+│   ├── audit_data.dart             # Audit record model (Hive)
+│   ├── audit_history.dart          # Audit history entry
+│   ├── enums.dart                  # Environment / Mobility enums
+│   ├── sync_status.dart            # Offline sync status (Hive)
+│   └── temp_photo_model.dart       # TempPhoto model (Hive)
+│
 ├── providers/
-│   ├── auth_provider.dart      # Firebase Auth + RBAC rights
-│   ├── asset_provider.dart     # Asset CRUD + cache + audit tracking
-│   ├── temp_photo_provider.dart# TempPhoto CRUD + RBAC
-│   ├── audit_provider.dart     # Submit audit log
-│   └── theme_provider.dart     # Theme mode persistence
-├── services/
-│   └── rbac_service.dart       # RBAC filtering logic
+│   ├── asset_provider.dart         # Asset CRUD + cache + audit tracking
+│   ├── audit_provider.dart         # Submit audit log
+│   ├── auth_provider.dart          # Firebase Auth + RBAC rights
+│   ├── temp_photo_provider.dart    # TempPhoto CRUD + RBAC
+│   └── theme_provider.dart         # Theme mode persistence
+│
 ├── screens/
-│   ├── home_screen.dart        # BottomNav wrapper (4 tabs)
-│   ├── survey_screen.dart      # Tab 0: Survey (asset list + filters)
-│   ├── search_screen.dart      # Tab 1: Public search
-│   ├── dashboard_screen.dart   # Tab 2: Progress dashboard
-│   ├── temp_photo_screen.dart  # Tab 3: Temp photos
-│   ├── audit_screen.dart       # Single asset audit form
+│   ├── home_screen.dart            # BottomNav wrapper (4 tabs)
+│   ├── survey_screen.dart          # Tab 0: Survey (asset list + filters)
+│   ├── search_screen.dart          # Tab 1: Public search
+│   ├── dashboard_screen.dart       # Tab 2: Progress dashboard
+│   ├── temp_photo_screen.dart      # Tab 3: Temp photos
+│   ├── audit_screen.dart           # Single asset audit form
+│   ├── not_found_screen.dart       # 404 fallback
 │   └── temp_photo_accept_dialog.dart # Accept temp as asset
-├── widgets/
-│   ├── asset_class_picker.dart
-│   ├── asset_search_bar.dart
-│   ├── asset_table_list.dart
-│   ├── audit_form.dart
-│   ├── condition_select.dart
-│   ├── cost_center_selector.dart
-│   ├── image_modal.dart
-│   ├── image_uploader.dart
-│   ├── load_more_list.dart
-│   ├── temp_photo_accept_modal.dart
-│   ├── temp_photo_card.dart
-│   ├── temp_photo_edit_form.dart
-│   └── temp_photo_panel.dart
+│
+├── services/
+│   ├── rbac_service.dart           # RBAC filtering logic + CostCenter/Class stats
+│   └── offline_sync_service.dart   # Offline data sync manager (batch upload)
+│
 ├── utils/
-│   ├── image_picker.dart
-│   └── temp_photo_utils.dart
-└── Validation/
-    └── temp_photo_validator.dart
+│   ├── image_picker.dart           # Image picker helper (camera/gallery)
+│   └── temp_photo_utils.dart       # Temp photo utility functions
+│
+├── validation/
+│   └── temp_photo_validator.dart   # Temp photo validation rules
+│
+└── widgets/
+    ├── asset_class_picker.dart      # Asset class filter chips
+    ├── asset_search_bar.dart        # Search bar widget
+    ├── asset_table_list.dart        # Asset list with thumbnails
+    ├── audit_form.dart              # Full audit form (Environment/Mobility/Location/Photo)
+    ├── condition_select.dart        # Condition dropdown + custom input
+    ├── cost_center_selector.dart    # Cost center filter chips
+    ├── image_modal.dart             # Full-screen image viewer
+    ├── image_uploader.dart          # Image upload component
+    ├── load_more_list.dart          # Paginated asset list
+    ├── sync_progress_widget.dart    # Offline sync progress indicator
+    ├── temp_photo_accept_modal.dart # Accept temp as asset dialog
+    ├── temp_photo_card.dart         # Temp photo card
+    ├── temp_photo_edit_form.dart    # Edit/create temp photo form
+    └── temp_photo_panel.dart        # Temp photos list panel
 ```
 
 ## การตั้งค่า Firebase
@@ -118,6 +138,9 @@ lib/
 # Xcode Run Destinations
 └── Xcode Run Destinations
     ├── Recent
+    │   ├── ✓ 💻 My Mac (Designed for iPad)
+    │   ├── 📱 iPad ของ ลิขิต (Network)
+    │   └── 📱 iPhone 17 Pro
     │   ├── ✓ 💻 My Mac (Designed for iPad)
     │   ├── 📱 iPad ของ ลิขิต (Network)
     │   └── 📱 iPhone 17 Pro

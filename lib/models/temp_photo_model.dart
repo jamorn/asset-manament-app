@@ -1,8 +1,10 @@
-// temp_photo_model.dart
+// lib/models/temp_photo_model.dart
+import 'package:equatable/equatable.dart';
+import '../mappers/asset_mapper.dart';
 
 enum TempPhotoStatus { pending, merged }
 
-class TempPhoto {
+class TempPhoto extends Equatable {
   final String tempId;
   final String referenceAssetNo;
   final String description;
@@ -15,7 +17,7 @@ class TempPhoto {
   final String costCenterName;
   final TempPhotoStatus status;
 
-  TempPhoto({
+  const TempPhoto({
     required this.tempId,
     required this.referenceAssetNo,
     required this.description,
@@ -26,32 +28,33 @@ class TempPhoto {
     required this.assetClassName,
     required this.costCenter,
     required this.costCenterName,
-    required this.status,
+    this.status = TempPhotoStatus.pending,
   });
 
-  // แปลงจาก Map (Firestore Document) มาเป็น Object
   factory TempPhoto.fromMap(Map<String, dynamic> map, String id) {
+    // ✅ ใส่ validation
+    if (map['referenceAssetNo'] == null || 
+        map['referenceAssetNo'].toString().isEmpty) {
+      throw ArgumentError('referenceAssetNo is required');
+    }
+
     return TempPhoto(
       tempId: id,
-      referenceAssetNo: map['referenceAssetNo'] ?? '',
-      description: map['description'] ?? '',
-      photoUrl: map['photoUrl'] ?? '',
-      location: map['location'] ?? '',
-      capturedAt: map['capturedAt'] != null
-          ? (map['capturedAt']
-              as DateTime) // หรือดึงผ่าน Timestamp.toDate() ใน Cloud Firestore
-          : null,
-      assetClass: map['assetClass'] ?? '',
-      assetClassName: map['assetClassName'] ?? '',
-      costCenter: map['costCenter'] ?? '',
-      costCenterName: map['costCenterName'] ?? '',
-      status: map['status'] == 'merged'
-          ? TempPhotoStatus.merged
+      referenceAssetNo: map['referenceAssetNo']?.toString() ?? '',
+      description: map['description']?.toString() ?? '',
+      photoUrl: map['photoUrl']?.toString() ?? '',
+      location: map['location']?.toString() ?? '',
+      capturedAt: AssetMapper.parseTimestamp(map['capturedAt']),
+      assetClass: map['assetClass']?.toString() ?? '',
+      assetClassName: map['assetClassName']?.toString() ?? '',
+      costCenter: map['costCenter']?.toString() ?? '',
+      costCenterName: map['costCenterName']?.toString() ?? '',
+      status: map['status'] == 'merged' 
+          ? TempPhotoStatus.merged 
           : TempPhotoStatus.pending,
     );
   }
 
-  // แปลงจาก Object เป็น Map เพื่อบันทึกลงฐานข้อมูล
   Map<String, dynamic> toMap() {
     return {
       'referenceAssetNo': referenceAssetNo,
@@ -67,15 +70,37 @@ class TempPhoto {
     };
   }
 
-  /// 🆕 fromJson alias — for consistency with AssetModel.fromJson
   factory TempPhoto.fromJson(Map<String, dynamic> json) {
     return TempPhoto.fromMap(json, json['tempId']?.toString() ?? '');
   }
+
+  @override
+  List<Object?> get props => [
+    tempId,
+    referenceAssetNo,
+    description,
+    photoUrl,
+    location,
+    capturedAt,
+    assetClass,
+    assetClassName,
+    costCenter,
+    costCenterName,
+    status,
+  ];
+
+  @override
+  String toString() => 
+      'TempPhoto(tempId: $tempId, referenceAssetNo: $referenceAssetNo)';
 }
 
-class AcceptResult {
+class AcceptResult extends Equatable {
   final bool ok;
   final String message;
 
-  AcceptResult({required this.ok, required this.message});
+  // ✅ เพิ่ม const
+  const AcceptResult({required this.ok, required this.message});
+
+  @override
+  List<Object?> get props => [ok, message];
 }

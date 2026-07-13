@@ -1,7 +1,8 @@
-// temp_photo_accept_modal.dart
+// lib/widgets/temp_photo_accept_modal.dart
 import 'package:flutter/material.dart';
 import '../models/temp_photo_model.dart';
-import '../Validation/temp_photo_validator.dart';
+import '../validation/temp_photo_validator.dart';
+import '../config/theme.dart';
 
 void showTempPhotoAcceptModal({
   required BuildContext context,
@@ -16,7 +17,6 @@ void showTempPhotoAcceptModal({
       String? errorMessage;
       bool isSubmitting = false;
 
-      // ใช้ StatefulBuilder เพื่อให้ Re-render เฉพาะภายในโมดอลเวลามีการเปลี่ยนแปลง State
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
@@ -36,19 +36,28 @@ void showTempPhotoAcceptModal({
                 ),
                 if (errorMessage != null) ...[
                   const SizedBox(height: 10),
-                  Text(errorMessage!,
-                      style: const TextStyle(color: Colors.red, fontSize: 13)),
+                  Text(
+                    errorMessage!,
+                    style: TextStyle(
+                      color: context.error,
+                      fontSize: 13,
+                    ),
+                  ),
                 ]
               ],
             ),
             actions: [
-              TextButton(
-                child:
-                    const Text('✕ CLOSE', style: TextStyle(color: Colors.red)),
+                            TextButton(
                 onPressed: isSubmitting ? null : () => Navigator.of(ctx).pop(),
+                child: Text(
+                  '✕ CLOSE',
+                  style: TextStyle(color: context.error),
+                ),
               ),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.primary,
+                ),
                 onPressed: isSubmitting
                     ? null
                     : () async {
@@ -56,7 +65,6 @@ void showTempPhotoAcceptModal({
                           errorMessage = null;
                         });
 
-                        // 1. ตรวจสอบเงื่อนไขผ่าน Validator คลาสที่เราสร้างไว้
                         final validation =
                             TempPhotoValidator.validateAssetNo(assetNoInput);
                         if (!validation.ok) {
@@ -64,13 +72,12 @@ void showTempPhotoAcceptModal({
                           return;
                         }
 
-                        // 2. เรียกใช้งาน Backend / Handler
                         setState(() => isSubmitting = true);
                         final result = await onAcceptSubmit(validation.message);
                         setState(() => isSubmitting = false);
 
                         if (result.ok) {
-                          Navigator.of(ctx).pop(); // ปิด Modal เมื่อสำเร็จ
+                          Navigator.of(ctx).pop();
                         } else {
                           setState(() => errorMessage = result.message);
                         }
@@ -81,8 +88,10 @@ void showTempPhotoAcceptModal({
                         height: 20,
                         child: CircularProgressIndicator(
                             color: Colors.white, strokeWidth: 2))
-                    : const Text('✅ ACCEPT & CREATE',
-                        style: TextStyle(color: Colors.white)),
+                    : const Text(
+                        '✅ ACCEPT & CREATE',
+                        style: TextStyle(color: Colors.white),
+                      ),
               ),
             ],
           );

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../models/asset_model.dart';
 import 'asset_table_list.dart';
+import '../config/theme.dart';
 
 class LoadMoreList extends StatefulWidget {
   final List<AssetModel> assets;
@@ -12,14 +13,14 @@ class LoadMoreList extends StatefulWidget {
   final int pageSize;
 
   const LoadMoreList({
-    Key? key,
+    super.key,
     required this.assets,
     required this.selectedAssetNo,
     required this.onSelect,
     required this.onImageClick,
     required this.auditedSet,
     required this.pageSize,
-  }) : super(key: key);
+  });
 
   @override
   State<LoadMoreList> createState() => _LoadMoreListState();
@@ -54,18 +55,18 @@ class _LoadMoreListState extends State<LoadMoreList> {
     final int remaining = widget.assets.length - _visibleCount;
 
     return Column(
-      mainAxisSize: MainAxisSize.min, // 🟢 สำคัญ!
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // ❌ เอา Expanded + SingleChildScrollView ออก
         Card(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           clipBehavior: Clip.antiAlias,
           elevation: 1,
           child: AssetTableList(
             assets: visibleAssets,
             selectedAssetNo: widget.selectedAssetNo,
-            onSelect: widget.onSelect,
+            onSelect: widget.onSelect,  // ✅ ส่ง AssetModel
             onImageClick: widget.onImageClick,
             auditedSet: widget.auditedSet,
           ),
@@ -77,10 +78,11 @@ class _LoadMoreListState extends State<LoadMoreList> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
+                  backgroundColor: context.primary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onPressed: () {
                   setState(() {
@@ -89,9 +91,9 @@ class _LoadMoreListState extends State<LoadMoreList> {
                 },
                 child: Text(
                   'LOAD MORE ($remaining REMAINING)',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: context.onPrimary,
                     fontSize: 13,
                   ),
                 ),

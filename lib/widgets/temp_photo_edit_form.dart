@@ -1,3 +1,4 @@
+// lib/widgets/temp_photo_edit_form.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
@@ -9,15 +10,8 @@ import '../providers/asset_provider.dart';
 import '../models/asset_model.dart';
 import '../utils/image_picker.dart';
 
-/// ฟอร์มสำหรับแก้ไข / เพิ่ม Temp Photo
-///
-/// พอร์ตจาก TempPhotoEditForm ใน app/components/temp/
-/// ใช้ได้ทั้ง "เพิ่มใหม่" (existing == null) และ "แก้ไข" (existing != null)
 class TempPhotoEditForm extends StatefulWidget {
-  /// ถ้า null = โหมดเพิ่มใหม่, ถ้ามีค่า = โหมดแก้ไข
   final TempPhoto? existing;
-
-  /// Callback เมื่อ save สำเร็จ
   final VoidCallback? onSaved;
 
   const TempPhotoEditForm({
@@ -36,14 +30,14 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
   late final TextEditingController _refCtrl;
   late final FocusNode _refFocusNode;
 
-  /// Asset ที่ถูกเลือกจาก Reference Search (Auto-fill)
   AssetModel? _selectedRefAsset;
-
-  /// เก็บรายการ assets ที่ filter ตามข้อความค้นหา
   List<AssetModel> _filteredAssets = [];
-
-  /// แสดง/ซ่อน dropdown ผลการค้นหา
   bool _showSearchResults = false;
+
+  String _autoAssetClass = '';
+  String _autoAssetClassName = '';
+  String _autoCostCenter = '';
+  String _autoCostCenterName = '';
 
   File? _imageFile;
   bool _isSubmitting = false;
@@ -59,13 +53,11 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
         TextEditingController(text: widget.existing?.referenceAssetNo ?? '');
     _refFocusNode = FocusNode();
 
-    // ถ้ามี referenceAssetNo จาก existing ให้โหลด AssetModel
     if (widget.existing?.referenceAssetNo != null &&
         widget.existing!.referenceAssetNo.isNotEmpty) {
       _loadReferenceAsset(widget.existing!.referenceAssetNo);
     }
 
-    // เมื่อพิมพ์ในช่องค้นหา
     _refCtrl.addListener(_onRefChanged);
   }
 
@@ -106,7 +98,6 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
   }
 
   void _loadReferenceAsset(String assetNo) async {
-    // ใช้ context หลัง build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final assetProv = context.read<AssetProvider>();
       final found =
@@ -131,16 +122,18 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
   }
 
   void _autoFillFromAsset(AssetModel asset) {
-    // ถ้ายังไม่ได้กรอก description ให้เติมจาก asset
     if (_descCtrl.text.trim().isEmpty) {
       _descCtrl.text = asset.description;
     }
-    // ถ้ายังไม่ได้กรอก location ให้เติมจาก asset
     if (_locCtrl.text.trim().isEmpty) {
       _locCtrl.text = asset.lastLocationName.isNotEmpty
           ? asset.lastLocationName
           : asset.mainLocation;
     }
+    _autoAssetClass = asset.assetClass;
+    _autoAssetClassName = asset.assetClassName;
+    _autoCostCenter = asset.costCenter;
+    _autoCostCenterName = asset.costCenterName;
   }
 
   @override
@@ -163,7 +156,7 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
               if (_isEditMode)
                 Chip(
                   label: const Text('แก้ไข', style: TextStyle(fontSize: 10)),
-                  backgroundColor: Colors.orange[100],
+                  backgroundColor: context.primary.withValues(alpha: 0.2),
                 ),
             ],
           ),
@@ -196,10 +189,7 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
 
           const SizedBox(height: 12),
 
-          // ──────────────────────────────────────────
-          // 🔍 Reference Asset Search — พิมพ์เพื่อค้นหาครุภัณฑ์อ้างอิง
-          // พร้อม Auto-fill description/location เมื่อเลือก
-          // ──────────────────────────────────────────
+          // Reference Asset Search
           Text(
             '🔍 ค้นหาครุภัณฑ์อ้างอิง (Reference Asset)',
             style: TextStyle(
@@ -363,7 +353,7 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
             const SizedBox(height: 8),
             Text(
               '❌ ${prov.submitError}',
-              style: const TextStyle(color: Colors.red, fontSize: 12),
+              style: TextStyle(color: context.error, fontSize: 12),
             ),
           ],
         ],
@@ -393,7 +383,7 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(Icons.add_photo_alternate, size: 48, color: context.textSecondary),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text('แตะเพื่อเลือกรูป',
             style: TextStyle(fontSize: 11, color: context.textSecondary)),
       ],
@@ -401,7 +391,6 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
   }
 
   Future<void> _pickImage() async {
-    // แสดง bottom sheet ให้เลือก กล้อง / แกลเลอรี
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       builder: (ctx) => SafeArea(
@@ -443,6 +432,19 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
 
     setState(() => _isSubmitting = true);
 
+    final assetClass = _autoAssetClass.isNotEmpty
+        ? _autoAssetClass
+        : (_isEditMode ? widget.existing!.assetClass : '');
+    final assetClassName = _autoAssetClassName.isNotEmpty
+        ? _autoAssetClassName
+        : (_isEditMode ? widget.existing!.assetClassName : '');
+    final costCenter = _autoCostCenter.isNotEmpty
+        ? _autoCostCenter
+        : (_isEditMode ? widget.existing!.costCenter : '');
+    final costCenterName = _autoCostCenterName.isNotEmpty
+        ? _autoCostCenterName
+        : (_isEditMode ? widget.existing!.costCenterName : '');
+
     bool ok;
     if (_isEditMode) {
       ok = await prov.updateTempPhoto(
@@ -451,10 +453,10 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
         description: _descCtrl.text.trim(),
         location: _locCtrl.text.trim(),
         imageFile: _imageFile,
-        assetClass: widget.existing!.assetClass,
-        assetClassName: widget.existing!.assetClassName,
-        costCenter: widget.existing!.costCenter,
-        costCenterName: widget.existing!.costCenterName,
+        assetClass: assetClass,
+        assetClassName: assetClassName,
+        costCenter: costCenter,
+        costCenterName: costCenterName,
       );
     } else {
       ok = await prov.saveTempPhoto(
@@ -462,10 +464,10 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
         description: _descCtrl.text.trim(),
         location: _locCtrl.text.trim(),
         imageFile: _imageFile!,
-        assetClass: '',
-        assetClassName: '',
-        costCenter: '',
-        costCenterName: '',
+        assetClass: assetClass,
+        assetClassName: assetClassName,
+        costCenter: costCenter,
+        costCenterName: costCenterName,
       );
     }
 

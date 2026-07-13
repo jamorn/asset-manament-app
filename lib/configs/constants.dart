@@ -1,3 +1,4 @@
+// lib/configs/constants.dart
 /// Firebase Firestore collections path constants
 class FirestorePath {
   FirestorePath._();

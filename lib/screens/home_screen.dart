@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import 'survey_screen.dart';
+import 'survey_dev_screen.dart';
 import 'search_screen.dart';
 import 'dashboard_screen.dart';
 import 'temp_photo_screen.dart';
@@ -24,7 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _pages.addAll([
-      SurveyScreen(onTabSwitch: switchToTab),
+      const SurveyScreen(),
+      const SurveyDevScreen(),
       const SearchScreen(),
       const DashboardScreen(),
       const TempPhotoScreen(),
@@ -111,6 +113,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.assignment_outlined),
             selectedIcon: Icon(Icons.assignment),
             label: 'Survey',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.developer_mode_outlined),
+            selectedIcon: Icon(Icons.developer_mode),
+            label: 'Dev',
           ),
           NavigationDestination(
             icon: Icon(Icons.search_outlined),

@@ -14,11 +14,10 @@ import '../widgets/asset_search_bar.dart';
 import '../widgets/load_more_list.dart';
 import '../widgets/image_modal.dart';
 import 'audit_screen.dart';
+import 'temp_photo_screen.dart';
 
 class SurveyScreen extends StatefulWidget {
-  final void Function(int index)? onTabSwitch;
-
-  const SurveyScreen({super.key, this.onTabSwitch});
+  const SurveyScreen({super.key});
 
   @override
   State<SurveyScreen> createState() => _SurveyScreenState();
@@ -31,25 +30,11 @@ class _SurveyScreenState extends State<SurveyScreen> {
   String? _selectedAssetClass;
   bool _showUnauditedOnly = true;
 
-  void _switchTab(int index) {
-    widget.onTabSwitch?.call(index);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // refresh assets ทุกครั้งที่กลับมาหน้านี้ (force ไม่ใช้ cache)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AssetProvider>().retry();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final assetProv = context.watch<AssetProvider>();
-    final themeProvider = context.watch<ThemeProvider>();
-    final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+    final themeProvider = context.watch<ThemeProvider>(); // 🟢 เรียกใช้เฝ้าดูสถานะธีม
 
     if (auth.isAppLoading) {
       return const Scaffold(
@@ -69,8 +54,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text('กรุณาเข้าสู่ระบบ',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   const Text('ระบบจำเป็นต้องยืนยันตัวตนผ่านบัญชี Google'),
                   const SizedBox(height: 16),
@@ -108,7 +92,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
       );
     }
 
-    final allowedCostCenters = AppRoutes.getAllowedCostCenters(
+    final allowedCostCenters = AppRoutes.getAllowedCostCentersV2(
       screenName: AppRoutes.survey,
       role: auth.role,
       userCostCenters: auth.allowedCostCenters,
@@ -122,9 +106,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
       ),
     );
 
-    if (_selectedCostCenter == null &&
-        allowedCostCenters is List &&
-        allowedCostCenters!.isNotEmpty) {
+    if (_selectedCostCenter == null && allowedCostCenters is List && allowedCostCenters!.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() => _selectedCostCenter = allowedCostCenters[0]);
       });
@@ -138,100 +120,83 @@ class _SurveyScreenState extends State<SurveyScreen> {
       ),
     );
 
-    // Manual refresh — ดึงข้อมูลจาก Firestore ทั้งหมดใหม่ (bypass cache)
-    Future<void> _manualRefresh() async {
-      await context.read<AssetProvider>().retry();
-    }
-
     var filteredAssets = visibleAssets;
     if (_selectedCostCenter != null) {
-      filteredAssets = filteredAssets
-          .where((a) => a.costCenter == _selectedCostCenter)
-          .toList();
+      filteredAssets = filteredAssets.where((a) => a.costCenter == _selectedCostCenter).toList();
     }
     if (_selectedAssetClass != null) {
-      filteredAssets = filteredAssets
-          .where((a) => a.assetClass == _selectedAssetClass)
-          .toList();
+      filteredAssets = filteredAssets.where((a) => a.assetClass == _selectedAssetClass).toList();
     }
     if (_showUnauditedOnly) {
-      filteredAssets = filteredAssets
-          .where((a) => !assetProv.auditedAssetNos.contains(a.assetNo))
-          .toList();
+      filteredAssets = filteredAssets.where((a) => !assetProv.auditedAssetNos.contains(a.assetNo)).toList();
     }
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toUpperCase();
-      filteredAssets = filteredAssets
-          .where((a) =>
-              a.assetNo.toUpperCase().contains(q) ||
-              a.description.toUpperCase().contains(q) ||
-              a.lastLocationName.toUpperCase().contains(q) ||
-              a.mainLocation.toUpperCase().contains(q) ||
-              a.costCenter.toUpperCase().contains(q) ||
-              a.costCenterName.toUpperCase().contains(q) ||
-              a.assetOwner.toUpperCase().contains(q) ||
-              (a.remarks?.toUpperCase() ?? '').contains(q))
-          .toList();
+      filteredAssets = filteredAssets.where((a) =>
+        a.assetNo.toUpperCase().contains(q) ||
+        a.description.toUpperCase().contains(q) ||
+        a.lastLocationName.toUpperCase().contains(q) ||
+        a.mainLocation.toUpperCase().contains(q) ||
+        a.costCenter.toUpperCase().contains(q) ||
+        a.costCenterName.toUpperCase().contains(q) ||
+        a.assetOwner.toUpperCase().contains(q) ||
+        (a.remarks?.toUpperCase() ?? '').contains(q)
+      ).toList();
     }
 
     final poolForClasses = _selectedCostCenter != null
-        ? visibleAssets
-            .where((a) => a.costCenter == _selectedCostCenter)
-            .toList()
+        ? visibleAssets.where((a) => a.costCenter == _selectedCostCenter).toList()
         : visibleAssets;
-    final classMap = <String, AssetClassInfo>{};
+    final classMap = <String, AssetClassStats>{};
     for (final a in poolForClasses) {
-      classMap
-          .putIfAbsent(
-              a.assetClass,
-              () => AssetClassInfo(
-                    assetClass: a.assetClass,
-                    assetClassName: a.assetClassName,
-                    count: 0,
-                  ))
-          .count++;
+      classMap.putIfAbsent(a.assetClass, () => AssetClassStats(
+        assetClass: a.assetClass,
+        assetClassName: a.assetClassName,
+        total: 0,
+        audited: 0,
+      )).total++;
     }
     final availableAssetClasses = classMap.values.toList()
       ..sort((a, b) => a.assetClass.compareTo(b.assetClass));
 
+    // ✅ ตรวจสอบว่า _selectedAssetClass ยังมีอยู่ใน available classes หรือไม่
+    if (_selectedAssetClass != null && 
+        !availableAssetClasses.any((ac) => ac.assetClass == _selectedAssetClass)) {
+      _selectedAssetClass = null;
+    }
+
+    final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Asset Survey ${DateTime.now().year}'),
+        title: const Text('ASSET DEV — Survey'),
         actions: isTablet
             // ── iPad: แสดงปุ่มทั้งหมด ──
             ? [
                 IconButton(
                   tooltip: 'Search',
                   icon: const Icon(Icons.search),
-                  onPressed: () => _switchTab(1),
+                  onPressed: () => Navigator.pushNamed(context, AppRoutes.search),
                 ),
                 IconButton(
                   tooltip: 'Dashboard',
                   icon: const Icon(Icons.dashboard),
-                  onPressed: () => _switchTab(2),
+                  onPressed: () => Navigator.pushNamed(context, AppRoutes.dashboard),
                 ),
                 IconButton(
                   tooltip: 'Temp Photos',
                   icon: const Icon(Icons.camera_alt_outlined),
-                  onPressed: () => _switchTab(3),
+                  onPressed: () => _showTempPhotosPage(context),
                 ),
                 IconButton(
-                  tooltip:
-                      themeProvider.isDarkMode ? 'Light mode' : 'Dark mode',
-                  icon: Icon(themeProvider.isDarkMode
-                      ? Icons.light_mode
-                      : Icons.dark_mode),
+                  tooltip: themeProvider.isDarkMode ? 'Light mode' : 'Dark mode',
+                  icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
                   onPressed: () {
                     final t = context.read<ThemeProvider>();
-                    t.setThemeMode(
-                        t.isDarkMode ? ThemeMode.light : ThemeMode.dark);
+                    t.setThemeMode(t.isDarkMode ? ThemeMode.light : ThemeMode.dark);
                   },
                 ),
-                IconButton(
-                  tooltip: 'Refresh',
-                  icon: const Icon(Icons.refresh),
-                  onPressed: _manualRefresh,
-                ),
+                // Avatar
                 CircleAvatar(
                   radius: 16,
                   backgroundImage: auth.user?.photoURL != null
@@ -241,10 +206,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                   child: auth.user?.photoURL == null
                       ? Text(
                           (auth.user?.email ?? 'U')[0].toUpperCase(),
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold),
+                          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
                         )
                       : null,
                 ),
@@ -254,12 +216,15 @@ class _SurveyScreenState extends State<SurveyScreen> {
             : [
                 PopupMenuButton<String>(
                   onSelected: (route) {
-                    if (route == 'temp_photos') {
-                      _switchTab(3);
+                    if (route == AppRoutes.dashboard) {
+                      Navigator.pushNamed(context, AppRoutes.dashboard);
+                    } else if (route == AppRoutes.search) {
+                      Navigator.pushNamed(context, AppRoutes.search);
+                    } else if (route == 'temp_photos') {
+                      _showTempPhotosPage(context);
                     } else if (route == 'toggle_theme') {
                       final theme = context.read<ThemeProvider>();
-                      theme.setThemeMode(
-                          theme.isDarkMode ? ThemeMode.light : ThemeMode.dark);
+                      theme.setThemeMode(theme.isDarkMode ? ThemeMode.light : ThemeMode.dark);
                     } else if (route == 'logout') {
                       context.read<AuthProvider>().logout();
                     }
@@ -275,10 +240,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                       child: auth.user?.photoURL == null
                           ? Text(
                               (auth.user?.email ?? 'U')[0].toUpperCase(),
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold),
+                              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
                             )
                           : null,
                     ),
@@ -289,43 +251,31 @@ class _SurveyScreenState extends State<SurveyScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(auth.user?.displayName ?? 'User',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 14)),
-                          Text(auth.user?.email ?? '',
-                              style: TextStyle(
-                                  fontSize: 11, color: context.textSecondary)),
+                          Text(auth.user?.displayName ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          Text(auth.user?.email ?? '', style: TextStyle(fontSize: 11, color: context.textSecondary)),
                         ],
                       ),
                     ),
                     const PopupMenuDivider(),
-                    const PopupMenuItem(
-                        value: 'temp_photos', child: Text('📸 Temp Photos')),
+                    const PopupMenuItem(value: AppRoutes.dashboard, child: Text('📊 Dashboard')),
+                    const PopupMenuItem(value: AppRoutes.search, child: Text('🔍 Search')),
+                    const PopupMenuItem(value: 'temp_photos', child: Text('📸 Temp Photos')),
                     const PopupMenuDivider(),
                     PopupMenuItem(
                       value: 'toggle_theme',
                       child: Row(
                         children: [
-                          Icon(
-                              themeProvider.isDarkMode
-                                  ? Icons.light_mode
-                                  : Icons.dark_mode,
-                              size: 18),
+                          Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode, size: 18),
                           const SizedBox(width: 8),
-                          Text(themeProvider.isDarkMode
-                              ? '☀️ Light mode'
-                              : '🌙 Dark mode'),
+                          Text(themeProvider.isDarkMode ? '☀️ Light mode' : '🌙 Dark mode'),
                         ],
                       ),
                     ),
                     const PopupMenuDivider(),
-                    const PopupMenuItem(
-                        value: 'logout',
-                        child: Text('🚪 Sign out',
-                            style: TextStyle(color: Colors.red))),
+                    const PopupMenuItem(value: 'logout', child: Text('🚪 Sign out', style: TextStyle(color: Colors.red))),
                   ],
                 ),
-              ],
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(12),
@@ -343,6 +293,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               style: const TextStyle(fontSize: 12),
             ),
             const SizedBox(height: 12),
+
             CostCenterSelector(
               costCenters: availableCostCenters,
               selectedCostCenter: _selectedCostCenter,
@@ -350,20 +301,20 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 _selectedCostCenter = cc;
                 _selectedAssetClass = null;
               }),
-              auditedCounts:
-                  _buildAuditedCounts(visibleAssets, assetProv.auditedAssetNos),
+              auditedCounts: _buildAuditedCounts(visibleAssets, assetProv.auditedAssetNos),
               hideAll: allowedCostCenters is List,
             ),
             const SizedBox(height: 12),
+
             if (_selectedCostCenter != null)
               AssetClassPicker(
                 classes: availableAssetClasses,
                 selectedClass: _selectedAssetClass,
                 onSelect: (ac) => setState(() => _selectedAssetClass = ac),
-                auditedCounts: _buildAuditedCounts(
-                    poolForClasses, assetProv.auditedAssetNos),
+                auditedCounts: _buildClassAuditedCounts(poolForClasses, assetProv.auditedAssetNos),
               ),
             if (_selectedCostCenter != null) const SizedBox(height: 12),
+
             Row(
               children: [
                 Switch(
@@ -372,33 +323,29 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 ),
                 Text(_showUnauditedOnly ? 'เหลือยังไม่ตรวจ' : 'ทั้งหมด'),
                 const Spacer(),
-                Text('${filteredAssets.length} รายการ',
-                    style: const TextStyle(fontSize: 11)),
+                Text('${filteredAssets.length} รายการ', style: const TextStyle(fontSize: 11)),
               ],
             ),
+
             AssetSearchBar(
               value: _searchQuery,
               onChanged: (v) => setState(() => _searchQuery = v),
             ),
+
             LoadMoreList(
               assets: filteredAssets,
               selectedAssetNo: _selectedAsset?.assetNo,
-              onSelect: (asset) async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AuditScreen(asset: asset),
-                  ),
-                );
-                // เมื่อกลับจาก AuditScreen → refresh ข้อมูลใหม่
-                if (mounted) {
-                  context.read<AssetProvider>().retry();
-                }
-              },
-              onImageClick: (url) => _showImageModal(url),
+              onSelect: (asset) => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AuditScreen(asset: asset),
+                ),
+              ),
+              onImageClick: (url) => showImageModal(context, url),
               auditedSet: assetProv.auditedAssetNos,
               pageSize: 50,
             ),
+
             const SizedBox(height: 32),
           ],
         ),
@@ -406,8 +353,16 @@ class _SurveyScreenState extends State<SurveyScreen> {
     );
   }
 
-  Map<String, int> _buildAuditedCounts(
-      List<AssetModel> assets, Set<String> auditedSet) {
+  void _showTempPhotosPage(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const TempPhotoScreen(),
+      ),
+    );
+  }
+
+  Map<String, int> _buildAuditedCounts(List<AssetModel> assets, Set<String> auditedSet) {
     final map = <String, int>{};
     for (final a in assets) {
       if (auditedSet.contains(a.assetNo)) {
@@ -417,7 +372,13 @@ class _SurveyScreenState extends State<SurveyScreen> {
     return map;
   }
 
-  void _showImageModal(String url) {
-    showImageModal(context, url);
+  Map<String, int> _buildClassAuditedCounts(List<AssetModel> assets, Set<String> auditedSet) {
+    final map = <String, int>{};
+    for (final a in assets) {
+      if (auditedSet.contains(a.assetNo)) {
+        map[a.assetClass] = (map[a.assetClass] ?? 0) + 1;
+      }
+    }
+    return map;
   }
 }

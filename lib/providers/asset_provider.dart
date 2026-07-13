@@ -1,9 +1,11 @@
+// lib/providers/asset_provider.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/asset_model.dart';
 import '../configs/constants.dart';
+import '../models/enums.dart';
 
 class AssetProvider with ChangeNotifier {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -35,7 +37,7 @@ class AssetProvider with ChangeNotifier {
   static const int _cacheTtlMs = 5 * 60 * 1000;
   static const String _firestoreCollection = FirestorePath.assets;
 
-    AssetProvider() {
+  AssetProvider() {
     _init();
   }
 
@@ -106,7 +108,8 @@ class AssetProvider with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final jsonStr = jsonEncode(_assets.map((e) => e.toJson()).toList());
       await prefs.setString(_cacheKey, jsonStr);
-      await prefs.setString(_cacheTimestampKey, _lastFetched!.toIso8601String());
+      await prefs.setString(
+          _cacheTimestampKey, _lastFetched!.toIso8601String());
     } catch (e) {
       _error = 'Failed to load assets: $e';
       _loading = false;
@@ -119,23 +122,48 @@ class AssetProvider with ChangeNotifier {
     final index = _assets.indexWhere((a) => a.assetNo == assetNo);
     if (index != -1) {
       final existing = _assets[index];
+
+      // ✅ แปลง String → Enum
+      final environment = updatedData['environment'] != null
+          ? Environment.fromString(updatedData['environment'].toString())
+          : existing.environment;
+
+      final mobility = updatedData['mobility'] != null
+          ? Mobility.fromString(updatedData['mobility'].toString())
+          : existing.mobility;
+
       _assets[index] = AssetModel(
         assetNo: updatedData['assetNo']?.toString() ?? existing.assetNo,
-        description: updatedData['description']?.toString() ?? existing.description,
-        assetClass: updatedData['assetClass']?.toString() ?? existing.assetClass,
-        assetClassName: updatedData['assetClassName']?.toString() ?? existing.assetClassName,
+        description:
+            updatedData['description']?.toString() ?? existing.description,
+        assetClass:
+            updatedData['assetClass']?.toString() ?? existing.assetClass,
+        assetClassName: updatedData['assetClassName']?.toString() ??
+            existing.assetClassName,
         capDate: updatedData['capDate']?.toString() ?? existing.capDate,
-        assetOwner: updatedData['assetOwner']?.toString() ?? existing.assetOwner,
-        costCenter: updatedData['costCenter']?.toString() ?? existing.costCenter,
-        costCenterName: updatedData['costCenterName']?.toString() ?? existing.costCenterName,
-        mainLocation: updatedData['mainLocation']?.toString() ?? existing.mainLocation,
-        lastLocationName: updatedData['lastLocationName']?.toString() ?? existing.lastLocationName,
-        environment: updatedData['environment']?.toString() ?? existing.environment,
-        mobility: updatedData['mobility']?.toString() ?? existing.mobility,
+        assetOwner:
+            updatedData['assetOwner']?.toString() ?? existing.assetOwner,
+        costCenter:
+            updatedData['costCenter']?.toString() ?? existing.costCenter,
+        costCenterName: updatedData['costCenterName']?.toString() ??
+            existing.costCenterName,
+        mainLocation:
+            updatedData['mainLocation']?.toString() ?? existing.mainLocation,
+        lastLocationName: updatedData['lastLocationName']?.toString() ??
+            existing.lastLocationName,
+
+        // ✅ ใช้ Enum ที่แปลงแล้ว
+        environment: environment,
+        mobility: mobility,
+
         status: updatedData['status']?.toString() ?? existing.status,
-        currentStatus: int.tryParse(updatedData['currentStatus']?.toString() ?? '') ?? existing.currentStatus,
-        lastImageUrl: updatedData['lastImageUrl']?.toString() ?? existing.lastImageUrl,
-        lastCondition: updatedData['lastCondition']?.toString() ?? existing.lastCondition,
+        currentStatus:
+            int.tryParse(updatedData['currentStatus']?.toString() ?? '') ??
+                existing.currentStatus,
+        lastImageUrl:
+            updatedData['lastImageUrl']?.toString() ?? existing.lastImageUrl,
+        lastCondition:
+            updatedData['lastCondition']?.toString() ?? existing.lastCondition,
         remarks: updatedData['remarks']?.toString() ?? existing.remarks,
         updatedAt: existing.updatedAt,
         updatedBy: updatedData['updatedBy']?.toString() ?? existing.updatedBy,

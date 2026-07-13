@@ -1,36 +1,25 @@
 // lib/widgets/asset_class_picker.dart
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
-
-class AssetClassInfo {
-  final String assetClass;
-  final String assetClassName;
-  int count;
-
-  AssetClassInfo({
-    required this.assetClass,
-    required this.assetClassName,
-    required this.count,
-  });
-}
+import '../services/rbac_service.dart';  // ✅ ใช้ AssetClassStats จาก rbac_service
 
 class AssetClassPicker extends StatelessWidget {
-  final List<AssetClassInfo> classes;
+  final List<AssetClassStats> classes;
   final String? selectedClass;
   final Function(String?) onSelect;
   final Map<String, int> auditedCounts;
 
-  const AssetClassPicker({
-    Key? key,
+    const AssetClassPicker({
+    super.key,
     required this.classes,
     required this.selectedClass,
     required this.onSelect,
     this.auditedCounts = const {},
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    final totalCount = classes.fold<int>(0, (sum, item) => sum + item.count);
+    final totalCount = classes.fold<int>(0, (sum, item) => sum + item.total);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,7 +72,7 @@ class AssetClassPicker extends StatelessWidget {
             // รายการปุ่ม Asset Class
             ...classes.map((ac) {
               final audited = auditedCounts[ac.assetClass] ?? 0;
-              final remaining = ac.count - audited;
+              final remaining = ac.total - audited;
               final isSelected = selectedClass == ac.assetClass;
 
               return InkWell(
@@ -122,7 +111,7 @@ class AssetClassPicker extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '${ac.assetClass} (${ac.count})',
+                          '${ac.assetClass} (${ac.total})',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,

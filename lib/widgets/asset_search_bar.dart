@@ -7,12 +7,12 @@ class AssetSearchBar extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final String placeholder;
 
-  const AssetSearchBar({
-    Key? key,
+    const AssetSearchBar({
+    super.key,
     required this.value,
     required this.onChanged,
     this.placeholder = 'ค้นหาเลขทรัพย์สิน หรือ ชื่อรายการ...',
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

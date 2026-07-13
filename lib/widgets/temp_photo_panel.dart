@@ -35,7 +35,7 @@ class TempPhotoPanel extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.orange[100],
+                color: context.primary.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -43,7 +43,7 @@ class TempPhotoPanel extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange[800]),
+                    color: context.primary),
               ),
             ),
             const Spacer(),

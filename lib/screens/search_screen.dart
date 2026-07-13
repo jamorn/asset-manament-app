@@ -30,7 +30,7 @@ class _SearchScreenState extends State<SearchScreen> {
         context.watch<ThemeProvider>(); // 🟢 เรียกใช้ watch เฝ้าดูสถานะธีม
 
     // Public route — skip RBAC filter (skipFilter = true)
-    final allowedCostCenters = AppRoutes.getAllowedCostCenters(
+    final allowedCostCenters = AppRoutes.getAllowedCostCentersV2(
       screenName: AppRoutes.search,
       role: auth.role,
       userCostCenters: auth.allowedCostCenters,

@@ -10,13 +10,13 @@ class CostCenterSelector extends StatelessWidget {
   final bool hideAll;
 
   const CostCenterSelector({
-    Key? key,
+    super.key,
     required this.costCenters,
     required this.selectedCostCenter,
     required this.onSelect,
     this.auditedCounts = const {},
     this.hideAll = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

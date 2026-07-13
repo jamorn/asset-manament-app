@@ -62,7 +62,7 @@ class ImagePickerUtil {
         'height': dims?['height'] ?? 0,
       };
     } catch (e) {
-      print('❌ getImageMeta error: $e');
+      debugPrint('❌ getImageMeta error: $e');
       return null;
     }
   }

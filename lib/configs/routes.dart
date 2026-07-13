@@ -1,78 +1,214 @@
-// 1. แปลง RoutePolicy จากแบบข้อความธรรมดา ให้เป็น Enum ที่พิมพ์สัญกรณ์พิมพ์ผิดไม่ได้ (Type-safe)
+// lib/configs/routes.dart
+import 'package:flutter/material.dart';
+
+// ============================================================================
+// 📌 Route Policy Enum
+// ============================================================================
 enum RoutePolicy { public, hybrid, private }
 
-// 2. ขึ้นโมเดล RouteConfig ล้อตามอินเตอร์เฟสของ TypeScriptเดิม
+// ============================================================================
+// 👤 User Role Enum (Type-safe แทน String)
+// ============================================================================
+enum UserRole {
+  owner,
+  admin,
+  user,
+  viewer,
+}
+
+extension UserRoleExtension on UserRole {
+  bool get isOwner => this == UserRole.owner;
+  bool get isAdmin => this == UserRole.admin;
+  bool get isUser => this == UserRole.user;
+  bool get isViewer => this == UserRole.viewer;
+  
+  String get displayName {
+    switch (this) {
+      case UserRole.owner:
+        return '👑 Owner';
+      case UserRole.admin:
+        return '🛡️ Admin';
+      case UserRole.user:
+        return '👤 User';
+      case UserRole.viewer:
+        return '👀 Viewer';
+    }
+  }
+}
+
+// ============================================================================
+// 📋 Route Configuration
+// ============================================================================
 class RouteConfig {
-  final String name; // ใช้เป็นชื่อเรียกแทน PathName บนหน้าเว็บ
+  final String name;
   final String label;
   final RoutePolicy policy;
+  final List<UserRole>? allowedRoles;
 
   const RouteConfig({
     required this.name,
     required this.label,
     required this.policy,
+    this.allowedRoles,
   });
 }
 
-// 3. กำหนดสิทธิ์และหน้าแอปทั้งหมดไว้ที่นี่ที่เดียว (ลอกโครงมาจาก Next.js เป๊ะๆ)
+// ============================================================================
+// 🧭 App Routes
+// ============================================================================
 class AppRoutes {
+  // ====== Route Names ======
   static const String survey = 'survey';
   static const String dashboard = 'dashboard';
   static const String search = 'search';
   static const String tempPhotos = 'temp_photos';
+  static const String audit = 'audit';
+  static const String assetDetail = 'asset_detail';
 
+  // ====== Route Configs ======
   static const List<RouteConfig> routes = [
     RouteConfig(
-        name: survey, label: '📋 Asset Survey', policy: RoutePolicy.private),
+      name: survey,
+      label: '📋 Asset Survey',
+      policy: RoutePolicy.private,
+      allowedRoles: [UserRole.owner, UserRole.admin, UserRole.user],
+    ),
     RouteConfig(
-        name: dashboard, label: '📊 Dashboard', policy: RoutePolicy.public),
-    RouteConfig(name: search, label: '🔍 Search', policy: RoutePolicy.public),
+      name: dashboard,
+      label: '📊 Dashboard',
+      policy: RoutePolicy.public,
+    ),
     RouteConfig(
-        name: tempPhotos, label: '📸 Temp Photos', policy: RoutePolicy.private),
+      name: search,
+      label: '🔍 Search',
+      policy: RoutePolicy.public,
+    ),
+    RouteConfig(
+      name: tempPhotos,
+      label: '📸 Temp Photos',
+      policy: RoutePolicy.private,
+      allowedRoles: [UserRole.owner, UserRole.admin],
+    ),
+    RouteConfig(
+      name: audit,
+      label: '📝 Audit',
+      policy: RoutePolicy.private,
+      allowedRoles: [UserRole.owner, UserRole.admin, UserRole.user],
+    ),
+    RouteConfig(
+      name: assetDetail,
+      label: '📄 Asset Detail',
+      policy: RoutePolicy.private,
+      allowedRoles: [UserRole.owner, UserRole.admin, UserRole.user],
+    ),
   ];
 
-  /// 4. ฟังก์ชันคำนวณสิทธิ์ Cost Centers ที่อนุญาตให้ดึงข้อมูลมาแสดงผลในหน้าจอของ Flutter
-  /// พอร์ตมาจากฟังก์ชัน `getAllowedCostCentersForRoute` ใน TypeScript ของคุณ
+  // ==========================================================================
+  // 📌 Helper Methods
+  // ==========================================================================
+
+  /// ดึง Label ของ Route
+  static String? getRouteLabel(String routeName) {
+    try {
+      return routes.firstWhere((r) => r.name == routeName).label;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// ดึง Policy ของ Route
+  static RoutePolicy? getRoutePolicy(String routeName) {
+    try {
+      return routes.firstWhere((r) => r.name == routeName).policy;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// ตรวจสอบว่า Role มีสิทธิ์เข้าถึง Route นี้หรือไม่
+  static bool isRouteAllowed(String routeName, UserRole? role) {
+    if (role == null) return false;
+    
+    try {
+      final config = routes.firstWhere((r) => r.name == routeName);
+      
+      // Public route → ใครก็ได้
+      if (config.policy == RoutePolicy.public) {
+        return true;
+      }
+      
+      // Private/Hybrid → ตรวจสอบ allowedRoles
+      if (config.allowedRoles != null) {
+        return config.allowedRoles!.contains(role);
+      }
+      
+      // Fallback: Owner มีสิทธิ์ทุกอย่าง
+      return role.isOwner;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Utility: สร้าง path
+  static String auditPath(String assetNo) => '/audit/$assetNo';
+  static String assetDetailPath(String assetNo) => '/asset/$assetNo';
+
+  // ==========================================================================
+  // 🔐 RBAC: คำนวณ Cost Centers ที่อนุญาต
+  // ==========================================================================
   static List<String>? getAllowedCostCenters({
     required String screenName,
-    required String? role, // 'owner', 'admin', หรือ null ถ้ายังไม่ login
-    required List<String>? userCostCenters, // สิทธิ์ที่อมไว้ใน AuthProvider
+    required UserRole? role,
+    required List<String>? userCostCenters,
   }) {
-    // 💡 ถ้าข้อมูลสิทธิ์ผู้ใช้จากคลังหลัก (Firebase) ยังโหลดไม่เสร็จ -> ส่งค่า null เสมือนเป็น undefined กลับไป
-    if (userCostCenters == null && role == null) {
-      return []; // ส่งลิสต์ว่างกลับไปก่อนเพื่อความปลอดภัย ป้องกัน Data Leak
+    // ถ้ายังไม่ login → ไม่มีสิทธิ์
+    if (role == null) {
+      return [];
     }
 
-    // ค้นหา Policy ของหน้าจอปัจจุบัน (ถ้าไม่เจอ ให้ fallback ไปที่ public เพื่อความปลอดภัย)
-    final currentRoute = routes.firstWhere(
-      (r) => r.name == screenName,
-      orElse: () => const RouteConfig(
-          name: 'unknown', label: 'Unknown', policy: RoutePolicy.public),
-    );
+    // Owner → เห็นทุกอย่าง
+    if (role.isOwner) {
+      return null;
+    }
 
-    final policy = currentRoute.policy;
-
-    // 💡 กรณี PUBLIC (เช่น หน้าค้นหา) — ส่องได้หมด ไม่กรองตามสิทธิ์สาขา
+    // Public route → เห็นทุกอย่าง (ไม่ filter)
+    final policy = getRoutePolicy(screenName);
     if (policy == RoutePolicy.public) {
-      return null; // null ในความหมายของแอปคุณคือ 'แสดงผลข้อมูลทั้งหมด' (ไม่ฟิลเตอร์)
+      return null;
     }
 
-    // 💡 กรณี HYBRID (เช่น หน้าสรุปยอดแดชบอร์ด)
-    if (policy == RoutePolicy.hybrid) {
-      if (role == null) return []; // ยังไม่ล็อกอิน ห้ามเห็นข้อมูลเด็ดขาด
-      if (role == 'owner') return null; // สิทธิ์สูงสุด ดูได้ทุกสาขา
-      if (role == 'admin')
-        return userCostCenters; // แอดมินทั่วไป ล็อกให้เห็นแค่สาขาตัวเอง
+    // Private/Hybrid → filter ตาม Cost Center
+    if (userCostCenters == null || userCostCenters.isEmpty) {
+      return [];
     }
 
-    // 💡 กรณีหน้า PRIVATE (เช่น หน้าแรกที่พนักงานใช้ลุยทำ Asset Survey)
-    if (policy == RoutePolicy.private) {
-      if (role == null) return []; // ดีดกลับ ไม่ให้เห็นคลังข้อมูลใหญ่
-      if (role == 'owner') return null; // ดูได้หมด
-      if (role == 'admin')
-        return userCostCenters; // ล็อกเฉพาะรหัส Cost Center ของตัวเอง
-    }
+    // Admin/User → เห็นเฉพาะ Cost Center ของตัวเอง
+    return userCostCenters;
+  }
 
-    return [];
+  /// Version 2: ใช้กับ role เป็น String (backward compatibility)
+  static List<String>? getAllowedCostCentersV2({
+    required String screenName,
+    required String? role,
+    required List<String>? userCostCenters,
+  }) {
+    UserRole? parsedRole;
+    if (role != null) {
+      try {
+        parsedRole = UserRole.values.firstWhere(
+          (r) => r.name == role,
+          orElse: () => UserRole.viewer,
+        );
+      } catch (_) {
+        parsedRole = UserRole.viewer;
+      }
+    }
+    
+    return getAllowedCostCenters(
+      screenName: screenName,
+      role: parsedRole,
+      userCostCenters: userCostCenters,
+    );
   }
 }
+

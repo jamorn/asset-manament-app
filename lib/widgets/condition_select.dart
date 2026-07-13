@@ -8,7 +8,6 @@ class ConditionSelect extends StatelessWidget {
   final ValueChanged<String> onChange;
   final ValueChanged<String> onCustomChange;
 
-  // รายการสถานะมาตรฐานที่ถอดแบบมาจากระบบเดิม (constants.ts)
   static const List<Map<String, String>> conditionOptions = [
     {'value': 'ใช้งานปกติ (Normal)', 'label': 'ใช้งานปกติ (Normal)'},
     {
@@ -26,22 +25,25 @@ class ConditionSelect extends StatelessWidget {
   ];
 
   const ConditionSelect({
-    Key? key,
+    super.key,
     required this.value,
     required this.customValue,
     required this.onChange,
     required this.onCustomChange,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'REMARK / CONDITION',
           style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber),
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: context.primary,
+          ),
         ),
         const SizedBox(height: 6),
 
@@ -65,14 +67,14 @@ class ConditionSelect extends StatelessWidget {
               onChanged: (val) {
                 if (val != null) onChange(val == 'custom' ? 'custom' : val);
               },
-              items: [
+                            items: [
                 ...conditionOptions.map((opt) {
                   return DropdownMenuItem<String>(
                     value: opt['value'],
                     child: Text(opt['label']!,
                         style: const TextStyle(fontSize: 14)),
                   );
-                }).toList(),
+                }),
                 const DropdownMenuItem<String>(
                   value: 'custom',
                   child: Text('ระบุรายละเอียดเอง...',
@@ -108,7 +110,10 @@ class ConditionSelect extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.amber, width: 2),
+                borderSide: BorderSide(
+                  color: context.primary,
+                  width: 2,
+                ),
               ),
             ),
           ),

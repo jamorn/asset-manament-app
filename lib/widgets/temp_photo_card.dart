@@ -10,14 +10,14 @@ class TempPhotoCard extends StatelessWidget {
   final VoidCallback onEdit;
   final Function(String) onDelete;
 
-  const TempPhotoCard({
-    Key? key,
+    const TempPhotoCard({
+    super.key,
     required this.tempPhoto,
     required this.onImageClick,
     this.onAccept,
     required this.onEdit,
     required this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
