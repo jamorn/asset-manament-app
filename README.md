@@ -91,12 +91,14 @@ lib/
 ├── screens/
 │   ├── home_screen.dart            # BottomNav wrapper (4 tabs)
 │   ├── survey_screen.dart          # Tab 0: Survey (asset list + filters)
+│   ├── survey_dev_screen.dart      # Developer version of survey screen
 │   ├── search_screen.dart          # Tab 1: Public search
 │   ├── dashboard_screen.dart       # Tab 2: Progress dashboard
 │   ├── temp_photo_screen.dart      # Tab 3: Temp photos
 │   ├── audit_screen.dart           # Single asset audit form
+│   ├── simple_audit_screen.dart    # Simplified single asset audit
+│   ├── demo_screen.dart            # Demo screen for testing
 │   ├── not_found_screen.dart       # 404 fallback
-│   └── temp_photo_accept_dialog.dart # Accept temp as asset
 │
 ├── services/
 │   ├── rbac_service.dart           # RBAC filtering logic + CostCenter/Class stats
@@ -116,9 +118,11 @@ lib/
     ├── audit_form.dart              # Full audit form (Environment/Mobility/Location/Photo)
     ├── condition_select.dart        # Condition dropdown + custom input
     ├── cost_center_selector.dart    # Cost center filter chips
+    ├── demo_form.dart               # Demo form for testing
     ├── image_modal.dart             # Full-screen image viewer
     ├── image_uploader.dart          # Image upload component
     ├── load_more_list.dart          # Paginated asset list
+    ├── simple_audit_form.dart       # Simplified audit form
     ├── sync_progress_widget.dart    # Offline sync progress indicator
     ├── temp_photo_accept_modal.dart # Accept temp as asset dialog
     ├── temp_photo_card.dart         # Temp photo card
