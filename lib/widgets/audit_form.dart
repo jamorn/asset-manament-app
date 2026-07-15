@@ -32,7 +32,6 @@ class _AuditFormState extends State<AuditForm> {
   String _selectedCondition = '';
   String _customCondition = '';
   File? _pickedImage;
-  final ImagePicker _picker = ImagePicker();
   String _existingImageUrl = '';
 
   @override
@@ -54,7 +53,6 @@ class _AuditFormState extends State<AuditForm> {
         ? a.lastLocationName
         : a.mainLocation;
     _existingImageUrl = a.lastImageUrl;
-    // _pickedImage คงค่า user ไว้ ถ้าเปลี่ยน asset → set null
     _pickedImage = null;
   }
 
@@ -80,11 +78,15 @@ class _AuditFormState extends State<AuditForm> {
     } else {
       image = await ImagePickerUtil.pickFromGallery();
     }
-    if (image != null) {
+    if (image != null && mounted) {
       setState(() {
         _pickedImage = image;
-        _existingImageUrl = ''; // user ถ่ายรูปใหม่ → ไม่ใช้ original
+        _existingImageUrl = '';
       });
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ ไม่สามารถเลือกรูปได้')),
+      );
     }
   }
 
@@ -118,8 +120,8 @@ class _AuditFormState extends State<AuditForm> {
       'environment': _selectedEnvironment?.toJson() ?? '',
       'mobility': _selectedMobility?.toJson() ?? '',
       'remarks': _remarksController.text.trim(),
-      'imageFile': _pickedImage,           // File? (null แปลว่าใช้ existing)
-      'existingImageUrl': _existingImageUrl, // URL เดิม (ถ้าไม่ได้ถ่ายใหม่)
+      'imageFile': _pickedImage,
+      'existingImageUrl': _existingImageUrl,
     });
   }
 
@@ -140,10 +142,8 @@ class _AuditFormState extends State<AuditForm> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-
               color: context.surfaceCard,
               borderRadius: BorderRadius.circular(16),
-
               border: Border.all(color: context.borderLight),
             ),
             child: Column(
@@ -276,8 +276,8 @@ class _AuditFormState extends State<AuditForm> {
           const SizedBox(height: 16),
 
           // ─── Evidence Photo ───
-          const Text('EVIDENCE PHOTO',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          Text('EVIDENCE PHOTO',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: context.textSecondary)),
           const SizedBox(height: 6),
           Container(
             width: double.infinity,
