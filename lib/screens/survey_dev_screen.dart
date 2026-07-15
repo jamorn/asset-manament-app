@@ -32,7 +32,7 @@ class _SurveyDevScreenState extends State<SurveyDevScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final assetProv = context.watch<AssetProvider>();
-    final themeProvider = context.watch<ThemeProvider>();
+    //final themeProvider = context.watch<ThemeProvider>();
 
     if (auth.isAppLoading) {
       return const Scaffold(

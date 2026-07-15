@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/asset_model.dart';
 import '../models/enums.dart';
+import '../configs/default_values.dart';
+import '../utils/image_picker.dart';
 import 'condition_select.dart';
 import '../config/theme.dart';
 
@@ -27,16 +31,39 @@ class _AuditFormState extends State<AuditForm> {
   final _locationController = TextEditingController();
   String _selectedCondition = '';
   String _customCondition = '';
+  File? _pickedImage;
+  final ImagePicker _picker = ImagePicker();
+  String _existingImageUrl = '';
 
   @override
   void initState() {
     super.initState();
-    _selectedEnvironment = widget.selectedAsset?.environment;
-    _selectedMobility = widget.selectedAsset?.mobility;
-    _remarksController.text = widget.selectedAsset?.remarks ?? '';
-    _locationController.text = widget.selectedAsset?.lastLocationName.isNotEmpty == true
-        ? widget.selectedAsset!.lastLocationName
-        : (widget.selectedAsset?.mainLocation ?? '');
+    _initFromAsset(widget.selectedAsset);
+  }
+
+  void _initFromAsset(AssetModel? a) {
+    if (a == null) return;
+    _selectedEnvironment = a.environment;
+    _selectedMobility = a.mobility;
+    _selectedCondition = a.lastCondition.isNotEmpty
+        ? a.lastCondition
+        : DefaultValues.condition;
+    _customCondition = '';
+    _remarksController.text = a.remarks ?? '';
+    _locationController.text = a.lastLocationName.isNotEmpty
+        ? a.lastLocationName
+        : a.mainLocation;
+    _existingImageUrl = a.lastImageUrl;
+    // _pickedImage คงค่า user ไว้ ถ้าเปลี่ยน asset → set null
+    _pickedImage = null;
+  }
+
+  @override
+  void didUpdateWidget(covariant AuditForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedAsset?.assetNo != widget.selectedAsset?.assetNo) {
+      _initFromAsset(widget.selectedAsset);
+    }
   }
 
   @override
@@ -46,11 +73,63 @@ class _AuditFormState extends State<AuditForm> {
     super.dispose();
   }
 
+  Future<void> _handleImagePick(ImageSource source) async {
+    File? image;
+    if (source == ImageSource.camera) {
+      image = await ImagePickerUtil.pickFromCamera();
+    } else {
+      image = await ImagePickerUtil.pickFromGallery();
+    }
+    if (image != null) {
+      setState(() {
+        _pickedImage = image;
+        _existingImageUrl = ''; // user ถ่ายรูปใหม่ → ไม่ใช้ original
+      });
+    }
+  }
+
+  void _handleSubmit() {
+    final location = _locationController.text.trim();
+    final finalCondition =
+        _selectedCondition == 'custom' ? _customCondition : _selectedCondition;
+
+    if (location.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ กรุณาระบุสถานที่จัดวาง')),
+      );
+      return;
+    }
+    if (finalCondition.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ กรุณาเลือกสถานะความสมบูรณ์')),
+      );
+      return;
+    }
+    if (_pickedImage == null && _existingImageUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ กรุณาถ่ายรูปครุภัณฑ์เพื่อเป็นหลักฐาน')),
+      );
+      return;
+    }
+
+    widget.onSubmit({
+      'location': location,
+      'condition': finalCondition,
+      'environment': _selectedEnvironment?.toJson() ?? '',
+      'mobility': _selectedMobility?.toJson() ?? '',
+      'remarks': _remarksController.text.trim(),
+      'imageFile': _pickedImage,           // File? (null แปลว่าใช้ existing)
+      'existingImageUrl': _existingImageUrl, // URL เดิม (ถ้าไม่ได้ถ่ายใหม่)
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.selectedAsset == null) {
       return const Center(child: Text('👈 กรุณาเลือกครุภัณฑ์'));
     }
+
+    final bool hasPreview = _pickedImage != null || _existingImageUrl.isNotEmpty;
 
     return SingleChildScrollView(
       child: Column(
@@ -61,9 +140,11 @@ class _AuditFormState extends State<AuditForm> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.green.shade100,
+
+              color: context.surfaceCard,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.green.shade400),
+
+              border: Border.all(color: context.borderLight),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,6 +158,12 @@ class _AuditFormState extends State<AuditForm> {
                 const SizedBox(height: 6),
                 Text('เลขครุภัณฑ์: ${widget.selectedAsset!.assetNo}',
                     style: TextStyle(color: context.textSecondary, fontSize: 13)),
+                if (widget.selectedAsset!.costCenterName.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text('หน่วยงาน: ${widget.selectedAsset!.costCenterName}',
+                        style: TextStyle(color: context.textSecondary, fontSize: 13)),
+                  ),
               ],
             ),
           ),
@@ -188,6 +275,87 @@ class _AuditFormState extends State<AuditForm> {
           ),
           const SizedBox(height: 16),
 
+          // ─── Evidence Photo ───
+          const Text('EVIDENCE PHOTO',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          Container(
+            width: double.infinity,
+            height: 220,
+            decoration: BoxDecoration(
+              color: context.surfaceContainer,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.borderLight),
+            ),
+            child: hasPreview
+                ? Stack(
+                    children: [
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: _pickedImage != null
+                              ? Image.file(_pickedImage!, fit: BoxFit.cover)
+                              : Image.network(_existingImageUrl, fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const Center(child: Text('รูปไม่แสดง'))),
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: CircleAvatar(
+                          backgroundColor: context.overlay,
+                          child: IconButton(
+                            icon: const Icon(Icons.refresh, color: Colors.white),
+                            onPressed: () => setState(() {
+                              _pickedImage = null;
+                              _existingImageUrl = '';
+                            }),
+                          ),
+                        ),
+                      )
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      InkWell(
+                        onTap: () => _handleImagePick(ImageSource.camera),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.camera_alt, size: 40, color: context.primary),
+                              const SizedBox(height: 8),
+                              const Text('ถ่ายรูปภาพสด',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      VerticalDivider(width: 1, thickness: 1, indent: 40, endIndent: 40, color: context.borderLight),
+                      InkWell(
+                        onTap: () => _handleImagePick(ImageSource.gallery),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.photo_library, size: 40, color: context.primary),
+                              const SizedBox(height: 8),
+                              const Text('เลือกจากคลังภาพ',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+          const SizedBox(height: 24),
+
           // ─── Submit Button ───
           SizedBox(
             width: double.infinity,
@@ -197,25 +365,33 @@ class _AuditFormState extends State<AuditForm> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              onPressed: widget.isSubmitting ? null : () {
-                widget.onSubmit({
-                  'location': _locationController.text.trim(),
-                  'condition': _selectedCondition == 'custom' ? _customCondition : _selectedCondition,
-                  'environment': _selectedEnvironment?.toJson(),
-                  'mobility': _selectedMobility?.toJson(),
-                  'remarks': _remarksController.text.trim(),
-                });
-              },
-              child: Text('CONFIRM & SAVE',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: context.onPrimary)),
+              onPressed: widget.isSubmitting ? null : _handleSubmit,
+              child: widget.isSubmitting
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        ),
+                        const SizedBox(width: 12),
+                        Text('SAVING DATA...',
+                            style: TextStyle(fontWeight: FontWeight.bold, color: context.onPrimary)),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('CONFIRM & SAVE',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: context.onPrimary)),
+                        const SizedBox(width: 8),
+                        const Text('💾', style: TextStyle(fontSize: 16)),
+                      ],
+                    ),
             ),
           ),
           const SizedBox(height: 16),
-
-          const Center(
-            child: Text('✅ AUDIT FORM — +Submit Button',
-                style: TextStyle(color: Colors.green, fontSize: 14, fontWeight: FontWeight.bold)),
-          ),
         ],
       ),
     );

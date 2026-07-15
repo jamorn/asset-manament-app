@@ -32,8 +32,29 @@ class ConditionSelect extends StatelessWidget {
     required this.onCustomChange,
   });
 
+  /// ดึงคำภาษาอังกฤษในวงเล็บ เช่น "ใช้งานได้ปกติ (Normal)" → "normal"
+  static String? _extractKeyword(String s) {
+    final match = RegExp(r'\((.+?)\)').firstMatch(s);
+    return match?.group(1)?.toLowerCase();
+  }
+
+  /// หาว่า value ตรงกับ option ไหน (เทียบ keyword ภาษาอังกฤษในวงเล็บ)
+  static String? _bestMatch(String val) {
+    if (val.isEmpty) return null;
+    final key = _extractKeyword(val);
+    if (key == null) return null;
+    for (final opt in conditionOptions) {
+      if (_extractKeyword(opt['value']!) == key) {
+        return opt['value'];
+      }
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final matched = _bestMatch(value);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -59,15 +80,13 @@ class ConditionSelect extends StatelessWidget {
             child: DropdownButton<String>(
               value: value.isEmpty
                   ? null
-                  : (conditionOptions.any((o) => o['value'] == value)
-                      ? value
-                      : 'custom'),
+                  : (matched ?? 'custom'),
               hint: const Text('-- เลือกสถานะ --'),
               isExpanded: true,
               onChanged: (val) {
                 if (val != null) onChange(val == 'custom' ? 'custom' : val);
               },
-                            items: [
+              items: [
                 ...conditionOptions.map((opt) {
                   return DropdownMenuItem<String>(
                     value: opt['value'],
@@ -86,9 +105,7 @@ class ConditionSelect extends StatelessWidget {
         ),
 
         // แสดงกล่องข้อความเมื่อเลือก "ระบุรายละเอียดเอง..."
-        if (value == 'custom' ||
-            (!conditionOptions.any((o) => o['value'] == value) &&
-                value.isNotEmpty)) ...[
+        if (value == 'custom' || (matched == null && value.isNotEmpty)) ...[
           const SizedBox(height: 8),
           TextField(
             controller: TextEditingController.fromValue(

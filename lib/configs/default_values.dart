@@ -1,4 +1,5 @@
 // lib/constants/default_values.dart
+
 /// ค่าเริ่มต้นที่ใช้ในแอป
 class DefaultValues {
   // ===== Asset Defaults =====
@@ -12,7 +13,7 @@ class DefaultValues {
   static const String costCenterName = '';
   static const String location = '';
   static const String imageUrl = '';
-  static const String condition = '';
+  static const String condition = 'ใช้งานปกติ (Normal)';
   static const String updatedBy = '';
   static const int currentStatus = 0;
   
