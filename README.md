@@ -167,6 +167,37 @@ lib/
         ├── 📱 iPhone 17 Pro Max
         ├── 📱 iPhone 17e
         └── 📱 iPhone Air
+## Example Firestore Document
+
+ตัวอย่างข้อมูลครุภัณฑ์ใน Cloud Firestore collection `assets`:
+
+```json
+{
+"assetNo": "200400012609",
+"description": "35W020 JUMBO BAG PACKER",
+"assetClass": "A2004",
+"assetClassName": "Machine - Straight Line",
+"capDate": "2016-10-01",
+"assetOwner": "จตุพร ธีระนิติกุล",
+"costCenter": "10111200",
+"costCenterName": "PLEB (BIC)-Sub",
+"mainLocation": "",
+"lastLocationName": "PLEB HD",
+"environment": "outdoor",
+"mobility": "fixed",
+"status": "",
+"currentStatus": 0,
+"lastCondition": "ใช้งานได้ปกติ (Normal)",
+"remarks": "35W050B",
+"lastImageUrl": "https://firebasestorage.googleapis.com/v0/b/asset-audit-95195.firebasestorage.app/o/artifacts%2Firpc-asset-audit%2Faudit_photos%2F200400012609_1781770907328.jpg?alt=media&token=6c3641a9-f936-4870-aa14-483e5d508993",
+"updatedAt": "2026-06-30T02:11:42.148Z",
+"updatedBy": "system",
+"history": []
+}
+```
+
+> หมายเหตุ: ฟิลด์ `history` จะมีข้อมูลเมื่อมีการบันทึก Audit แล้ว
+
 ## License
 
 MIT License
