@@ -176,7 +176,7 @@ class AssetApp extends StatelessWidget {
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
             themeMode: themeProvider.themeMode,
-            initialRoute: AppRoutes.survey,
+            initialRoute: AppRoutes.dashboard,
             routes: {
               AppRoutes.survey: (_) => const HomeScreen(),
               AppRoutes.dashboard: (_) => const DashboardScreen(),

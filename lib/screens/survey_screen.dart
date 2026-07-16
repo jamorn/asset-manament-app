@@ -24,7 +24,6 @@ class SurveyScreen extends StatefulWidget {
 }
 
 class _SurveyScreenState extends State<SurveyScreen> {
-  AssetModel? _selectedAsset;
   String _searchQuery = '';
   String? _selectedCostCenter;
   String? _selectedAssetClass;
@@ -334,7 +333,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
             LoadMoreList(
               assets: filteredAssets,
-              selectedAssetNo: _selectedAsset?.assetNo,
+              selectedAssetNo: null,
               onSelect: (asset) => Navigator.push(
                 context,
                 MaterialPageRoute(
