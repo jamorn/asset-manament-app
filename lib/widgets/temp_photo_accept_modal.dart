@@ -22,7 +22,7 @@ void showTempPhotoAcceptModal({
           return AlertDialog(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text('✅ ผูกเลขครุภัณฑ์ใหม่ (${tempPhoto.tempId})'),
+            title: Text('✅ ผูกเลขครุภัณฑ์ใหม่ (\${tempPhoto.tempId})'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -34,7 +34,7 @@ void showTempPhotoAcceptModal({
                   ),
                   onChanged: (val) => assetNoInput = val,
                 ),
-                if (errorMessage != null) ...[
+                if (errorMessage != null) ...[  
                   const SizedBox(height: 10),
                   Text(
                     errorMessage!,
@@ -47,7 +47,7 @@ void showTempPhotoAcceptModal({
               ],
             ),
             actions: [
-                            TextButton(
+              TextButton(
                 onPressed: isSubmitting ? null : () => Navigator.of(ctx).pop(),
                 child: Text(
                   '✕ CLOSE',
@@ -77,7 +77,9 @@ void showTempPhotoAcceptModal({
                         setState(() => isSubmitting = false);
 
                         if (result.ok) {
-                          Navigator.of(ctx).pop();
+                          if (ctx.mounted) {
+                            Navigator.of(ctx).pop();
+                          }
                         } else {
                           setState(() => errorMessage = result.message);
                         }

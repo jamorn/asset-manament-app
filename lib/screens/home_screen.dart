@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/asset_provider.dart';
 import 'survey_screen.dart';
 import 'survey_dev_screen.dart';
 import 'search_screen.dart';
@@ -17,7 +18,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
+  int _currentIndex = 3; // ✅ เริ่มที่ Dashboard (index 3) เพื่อรอโหลด Firebase
 
   final List<Widget> _pages = [];
 
@@ -76,10 +77,28 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // 🔄 ขณะโหลดสิทธิ์จาก Firestore → แสดง spinner
-    if (auth.isAppLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+    // 🔄 ขณะโหลดข้อมูล Firebase/Session/Assets → แสดง Loading
+    final assetProv = context.watch<AssetProvider>();
+    if (auth.isAppLoading || (auth.authorized && assetProv.loading && assetProv.assets.isEmpty)) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                auth.isAppLoading
+                    ? '⏳ กำลังตรวจสอบสิทธิ์ผู้ใช้...'
+                    : '⏳ กำลังโหลดข้อมูลครุภัณฑ์...',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 

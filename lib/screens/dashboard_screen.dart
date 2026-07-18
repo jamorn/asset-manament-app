@@ -481,7 +481,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // รอให้ดึงข้อมูลจากเซิร์ฟเวอร์เสร็จก่อน
       await provider.retry();
 
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -490,14 +490,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('❌ เกิดข้อผิดพลาด: ${e.toString()}')),
         );
       }
     } finally {
       // ปิด spinner หลังจากข้อมูลใหม่พร้อมแล้ว
-      if (mounted) {
+      if (context.mounted) {
         setState(() {
           _isBulkAccepting = false;
         });

@@ -281,7 +281,9 @@ class _AuditFormState extends State<AuditForm> {
           const SizedBox(height: 6),
           Container(
             width: double.infinity,
-            height: 220,
+            constraints: hasPreview
+                ? const BoxConstraints(minHeight: 250, maxHeight: 400)
+                : const BoxConstraints(minHeight: 140, maxHeight: 220),
             decoration: BoxDecoration(
               color: context.surfaceContainer,
               borderRadius: BorderRadius.circular(16),
@@ -290,14 +292,12 @@ class _AuditFormState extends State<AuditForm> {
             child: hasPreview
                 ? Stack(
                     children: [
-                      Positioned.fill(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: _pickedImage != null
-                              ? Image.file(_pickedImage!, fit: BoxFit.cover)
-                              : Image.network(_existingImageUrl, fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const Center(child: Text('รูปไม่แสดง'))),
-                        ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: _pickedImage != null
+                            ? Image.file(_pickedImage!, fit: BoxFit.contain, width: double.infinity)
+                            : Image.network(_existingImageUrl, fit: BoxFit.contain, width: double.infinity,
+                                errorBuilder: (_, __, ___) => const Center(child: Text('รูปไม่แสดง'))),
                       ),
                       Positioned(
                         top: 8,

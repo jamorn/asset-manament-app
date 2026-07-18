@@ -20,10 +20,12 @@ class RbacService {
   static List<AssetModel> filterAssets(
       List<AssetModel> assets, RBACContext ctx) {
     if (ctx.skipFilter) return assets; // หน้า Search สาธารณะ ไม่ต้องกรอง
-    if (ctx.allowedCostCenters == null)
+        if (ctx.allowedCostCenters == null) {
       return assets; // สิทธิ์สูงสุด (Owner เจอรหัส '*') ส่องเห็นทั้งหมด
-    if (ctx.allowedCostCenters!.isEmpty)
+    }
+    if (ctx.allowedCostCenters!.isEmpty) {
       return []; // ไม่มีสิทธิ์ บล็อกให้เห็นศูนย์ชิ้น
+    }
 
     // ดึงเฉพาะชิ้นที่มีรหัส CostCenter ตรงตามบัตรสิทธิ์พนักงาน
     return assets

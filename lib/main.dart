@@ -75,7 +75,7 @@ void main() async {
 // ============================================================================
 class ErrorApp extends StatelessWidget {
   final String error;
-  const ErrorApp({required this.error});
+  const ErrorApp({super.key, required this.error});
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +176,7 @@ class AssetApp extends StatelessWidget {
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
             themeMode: themeProvider.themeMode,
-            initialRoute: AppRoutes.dashboard,
+            initialRoute: AppRoutes.survey,
             routes: {
               AppRoutes.survey: (_) => const HomeScreen(),
               AppRoutes.dashboard: (_) => const DashboardScreen(),

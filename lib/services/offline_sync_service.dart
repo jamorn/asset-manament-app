@@ -113,7 +113,7 @@ class OfflineSyncService {
           // ✅ ลบออกจาก Hive หลังจากส่งสำเร็จ
           await box.delete(key);
           
-          debugPrint('  ✅ [${syncedCount}/${status.total}] ${audit.assetNo}');
+          debugPrint('  ✅ [$syncedCount/${status.total}] ${audit.assetNo}');
           
         } catch (e) {
           failedCount++;

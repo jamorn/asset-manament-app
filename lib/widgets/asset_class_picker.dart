@@ -100,7 +100,6 @@ class AssetClassPicker extends StatelessWidget {
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                  color: Colors.amber.withOpacity(0.2),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2))
                             ]
@@ -125,7 +124,8 @@ class AssetClassPicker extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: isSelected
-                                ? Colors.white.withOpacity(0.7)
+
+                                ? Colors.white.withValues(alpha: 0.7)
                                 : context.textSecondary,
                           ),
                         ),
@@ -136,7 +136,7 @@ class AssetClassPicker extends StatelessWidget {
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
                             color: isSelected
-                                ? Colors.white.withOpacity(0.9)
+                                ? Colors.white.withValues(alpha: 0.9)
                                 : Colors.green.shade700,
                           ),
                         ),
@@ -145,7 +145,7 @@ class AssetClassPicker extends StatelessWidget {
                   ),
                 ),
               );
-            }).toList(),
+                        }),
           ],
         ),
       ],

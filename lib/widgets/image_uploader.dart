@@ -4,21 +4,21 @@ import '../config/theme.dart';
 import 'dart:io';
 
 class ImageUploader extends StatelessWidget {
-  final File? pickedImage; // รูปภาพใหม่ที่เพิ่งเลือก/ถ่ายสด
-  final String? existingImageUrl; // URL ของรูปภาพเดิมที่มีอยู่ในระบบ (ถ้ามี)
+  final File? pickedImage;
+  final String? existingImageUrl;
   final Map<String, dynamic>?
-      fileMeta; // Metadata ของภาพ (ความกว้าง, สูง, ขนาดไฟล์)
-  final VoidCallback onTapUpload; // แอ็กชันเมื่อกดปุ่มเลือกรูปภาพ/เปิดกล้อง
-  final VoidCallback onClear; // แอ็กชันเมื่อกดลบรูปภาพเพื่อเลือกใหม่
+      fileMeta;
+  final VoidCallback onTapUpload;
+  final VoidCallback onClear;
 
   const ImageUploader({
-    Key? key,
+    super.key,
     required this.pickedImage,
     this.existingImageUrl,
     this.fileMeta,
     required this.onTapUpload,
     required this.onClear,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,6 @@ class ImageUploader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label ส่วนหัวข้อ
         Row(
           children: [
             Text(
@@ -39,7 +38,7 @@ class ImageUploader extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: context.primary),
             ),
-            if (hasExistingPhoto) ...[
+            if (hasExistingPhoto) ...[  
               const SizedBox(width: 6),
               Text(
                 '(หากต้องการเปลี่ยนรูปใหม่)',
@@ -50,13 +49,11 @@ class ImageUploader extends StatelessWidget {
         ),
         const SizedBox(height: 6),
 
-        // 1. กรณีที่ยังไม่ได้เลือกรูปภาพใหม่ และมีรูปภาพเดิมในระบบอยู่
-        if (!showPreview && hasExistingPhoto) ...[
+        if (!showPreview && hasExistingPhoto) ...[  
           Stack(
             children: [
               GestureDetector(
-                onTap:
-                    onTapUpload, // กดที่รูปเดิมเพื่อเปิดกล้อง/คลังภาพเปลี่ยนรูปใหม่ได้เลย
+                onTap: onTapUpload,
                 child: Container(
                   width: double.infinity,
                   height: 200,
@@ -77,7 +74,6 @@ class ImageUploader extends StatelessWidget {
                   ),
                 ),
               ),
-              // Badge แสดงบอกว่าเป็นรูปภาพปัจจุบันที่มีอยู่
               Positioned(
                 bottom: 8,
                 left: 8,
@@ -85,7 +81,7 @@ class ImageUploader extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -100,8 +96,7 @@ class ImageUploader extends StatelessWidget {
             ],
           ),
         ]
-        // 2. กรณีที่ยังไม่มีรูปภาพใดๆ เลย (แสดงปุ่มให้สัมผัสเพื่อถ่าย/เลือกรูป)
-        else if (!showPreview) ...[
+        else if (!showPreview) ...[  
           InkWell(
             onTap: onTapUpload,
             borderRadius: BorderRadius.circular(16),
@@ -110,12 +105,12 @@ class ImageUploader extends StatelessWidget {
               height: 140,
               decoration: BoxDecoration(
                 color: Colors.amber.shade50
-                    .withOpacity(0.4), // ใช้โทนสี Accent อ่อนๆ ตามสไตล์ต้นฉบับ
+                    .withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                     color: Colors.amber.shade300,
                     width: 2,
-                    style: BorderStyle.solid), // ดีไซน์ Border
+                    style: BorderStyle.solid),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -134,15 +129,14 @@ class ImageUploader extends StatelessWidget {
                     '(Optional)',
                     style: TextStyle(
                         fontSize: 9,
-                        color: Colors.amber.shade700.withOpacity(0.6)),
+                        color: Colors.amber.shade700.withValues(alpha: 0.6)),
                   ),
                 ],
               ),
             ),
           ),
         ]
-        // 3. กรณีที่เลือกรูปภาพใหม่เข้ามาสำเร็จ (แสดงภาพ Preview พร้อมปุ่มลบ และรายละเอียด Meta)
-        else ...[
+        else ...[  
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -156,7 +150,7 @@ class ImageUploader extends StatelessWidget {
                         border: Border.all(color: Colors.amber, width: 2),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 6,
                             offset: const Offset(0, 3),
                           )
@@ -169,7 +163,6 @@ class ImageUploader extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // ปุ่มวงกลมสีแดงกากบาทสำหรับกดเคลียร์รูปภาพออก
                   Positioned(
                     top: -6,
                     right: -6,
@@ -177,7 +170,7 @@ class ImageUploader extends StatelessWidget {
                       onTap: onClear,
                       child: const CircleAvatar(
                         radius: 14,
-                        backgroundColor: Colors.red, // สี Danger
+                        backgroundColor: Colors.red,
                         child: Icon(Icons.close, size: 16, color: Colors.white),
                       ),
                     ),
@@ -185,8 +178,7 @@ class ImageUploader extends StatelessWidget {
                 ],
               ),
 
-              // แสดง Image Meta Data ด้านล่างขวา (กว้างxสูง · ขนาดไฟล์ KB) ถ้าส่งมาให้
-              if (fileMeta != null) ...[
+              if (fileMeta != null) ...[  
                 Padding(
                   padding: const EdgeInsets.only(top: 4, right: 4),
                   child: Text(

@@ -225,7 +225,7 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
             style: const TextStyle(fontSize: 13),
           ),
           // Results Box
-          if (_showSearchResults && _filteredAssets.isNotEmpty) ...[
+          if (_showSearchResults && _filteredAssets.isNotEmpty) ...[  
             const SizedBox(height: 4),
             Container(
               decoration: BoxDecoration(
@@ -276,7 +276,7 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
                                 Expanded(
                                   child: Text(
                                     _filteredAssets[i].description.length > 50
-                                        ? '${_filteredAssets[i].description.substring(0, 50)}...'
+                                        ? '\${_filteredAssets[i].description.substring(0, 50)}...'
                                         : _filteredAssets[i].description,
                                     style: TextStyle(
                                       fontSize: 12,
@@ -349,10 +349,10 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
           ),
 
           // Error message
-          if (prov.submitError != null) ...[
+          if (prov.submitError != null) ...[  
             const SizedBox(height: 8),
             Text(
-              '❌ ${prov.submitError}',
+              '❌ \${prov.submitError}',
               style: TextStyle(color: context.error, fontSize: 12),
             ),
           ],
@@ -473,7 +473,7 @@ class _TempPhotoEditFormState extends State<TempPhotoEditForm> {
 
     setState(() => _isSubmitting = false);
 
-    if (ok && mounted) {
+    if (ok && context.mounted) {
       widget.onSaved?.call();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

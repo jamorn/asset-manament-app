@@ -95,7 +95,7 @@ class CostCenterSelector extends StatelessWidget {
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                                color: context.primary.withOpacity(0.2),
+                                color: context.primary.withValues(alpha: 0.2),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2))
                           ]
@@ -122,7 +122,7 @@ class CostCenterSelector extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 9,
                           color: isSelected
-                              ? context.onPrimary.withOpacity(0.7)
+                              ? context.onPrimary.withValues(alpha: 0.7)
                               : context.textSecondary,
                         ),
                       ),
@@ -133,7 +133,7 @@ class CostCenterSelector extends StatelessWidget {
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
                           color: isSelected
-                              ? context.onPrimary.withOpacity(0.8)
+                              ? context.onPrimary.withValues(alpha: 0.8)
                               : (remaining > 0
                                   ? Colors.orange.shade700
                                   : Colors.green.shade700),
@@ -143,7 +143,7 @@ class CostCenterSelector extends StatelessWidget {
                   ),
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ],
