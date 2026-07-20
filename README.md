@@ -79,7 +79,7 @@ lib/
 │   ├── audit_history.dart          # Audit history entry
 │   ├── enums.dart                  # Environment / Mobility enums
 │   ├── sync_status.dart            # Offline sync status (Hive)
-│   └── temp_photo_model.dart       # TempPhoto model (Hive)
+│   └── temp_photo_model.dart       # TempPhoto model
 │
 ├── providers/
 │   ├── asset_provider.dart         # Asset CRUD + cache + audit tracking
@@ -89,16 +89,13 @@ lib/
 │   └── theme_provider.dart         # Theme mode persistence
 │
 ├── screens/
-│   ├── home_screen.dart            # BottomNav wrapper (4 tabs)
-│   ├── survey_screen.dart          # Tab 0: Survey (asset list + filters)
-│   ├── survey_dev_screen.dart      # Developer version of survey screen
+│   ├── home_screen.dart            # BottomNav wrapper (4 tabs: Survey, Search, Dashboard, Temp Photos)
+│   ├── survey_screen.dart          # Tab 0: Survey (asset list + filters + audit form)
 │   ├── search_screen.dart          # Tab 1: Public search
-│   ├── dashboard_screen.dart       # Tab 2: Progress dashboard
-│   ├── temp_photo_screen.dart      # Tab 3: Temp photos
-│   ├── audit_screen.dart           # Single asset audit form
-│   ├── simple_audit_screen.dart    # Simplified single asset audit
-│   ├── demo_screen.dart            # Demo screen for testing
-│   ├── not_found_screen.dart       # 404 fallback
+│   ├── dashboard_screen.dart       # Tab 2: Progress dashboard (stats by Cost Center / Asset Class)
+│   ├── temp_photo_screen.dart      # Tab 3: Temp photos management
+│   ├── audit_screen.dart           # Single asset audit form page
+│   └── not_found_screen.dart       # 404 fallback
 │
 ├── services/
 │   ├── rbac_service.dart           # RBAC filtering logic + CostCenter/Class stats
@@ -106,23 +103,21 @@ lib/
 │
 ├── utils/
 │   ├── image_picker.dart           # Image picker helper (camera/gallery)
-│   └── temp_photo_utils.dart       # Temp photo utility functions
+│   └── temp_photo_utils.dart       # Temp photo utility functions (location history)
 │
 ├── validation/
-│   └── temp_photo_validator.dart   # Temp photo validation rules
+│   └── temp_photo_validator.dart   # Temp photo validation (asset no. 12 digits)
 │
 └── widgets/
     ├── asset_class_picker.dart      # Asset class filter chips
     ├── asset_search_bar.dart        # Search bar widget
     ├── asset_table_list.dart        # Asset list with thumbnails
-    ├── audit_form.dart              # Full audit form (Environment/Mobility/Location/Photo)
+    ├── audit_form.dart              # Full audit form (Environment/Mobility/Location/Condition/Photo)
     ├── condition_select.dart        # Condition dropdown + custom input
     ├── cost_center_selector.dart    # Cost center filter chips
-    ├── demo_form.dart               # Demo form for testing
-    ├── image_modal.dart             # Full-screen image viewer
+    ├── image_modal.dart             # Full-screen image viewer (zoom, rotate)
     ├── image_uploader.dart          # Image upload component
-    ├── load_more_list.dart          # Paginated asset list
-    ├── simple_audit_form.dart       # Simplified audit form
+    ├── load_more_list.dart          # Paginated asset list (load more button)
     ├── sync_progress_widget.dart    # Offline sync progress indicator
     ├── temp_photo_accept_modal.dart # Accept temp as asset dialog
     ├── temp_photo_card.dart         # Temp photo card

@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/asset_provider.dart';
 import 'survey_screen.dart';
-import 'survey_dev_screen.dart';
 import 'search_screen.dart';
 import 'dashboard_screen.dart';
 import 'temp_photo_screen.dart';
@@ -18,7 +17,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 3; // ✅ เริ่มที่ Dashboard (index 3) เพื่อรอโหลด Firebase
+  int _currentIndex = 2; // ✅ เริ่มที่ Dashboard (index 2) เพื่อรอโหลด Firebase
 
   final List<Widget> _pages = [];
 
@@ -27,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _pages.addAll([
       const SurveyScreen(),
-      const SurveyDevScreen(),
       const SearchScreen(),
       const DashboardScreen(),
       const TempPhotoScreen(),
@@ -132,11 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.assignment_outlined),
             selectedIcon: Icon(Icons.assignment),
             label: 'Survey',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.developer_mode_outlined),
-            selectedIcon: Icon(Icons.developer_mode),
-            label: 'Dev',
           ),
           NavigationDestination(
             icon: Icon(Icons.search_outlined),
