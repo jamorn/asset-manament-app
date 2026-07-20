@@ -263,6 +263,7 @@ class OfflineSyncService {
     final box = await Hive.openBox<AuditData>(_auditBox);
     int retrySuccess = 0;
     int retryFailed = 0;
+    final stillFailedIds = <String>[];  // ✅ เก็บ id ที่ยัง fail
     
     for (final auditId in status.failedIds) {
       // หา audit ใน box ที่ตรงกับ failedId
@@ -279,16 +280,17 @@ class OfflineSyncService {
         debugPrint('  ✅ Retry สำเร็จ: ${entry.value.assetNo}');
       } catch (e) {
         retryFailed++;
+        stillFailedIds.add(auditId);  // ✅ เก็บ id ที่ยัง fail
         debugPrint('  ❌ Retry ล้มเหลว: ${entry.value.assetNo}: $e');
       }
     }
     
-    // ✅ อัปเดตสถานะ
+    // ✅ อัปเดตสถานะ — เก็บ failedIds จริง (ไม่ใช้ ['retry_pending'])
     final statusBox = await Hive.openBox<SyncStatus>(_syncBox);
     final updated = status.copyWith(
       synced: status.synced + retrySuccess,
       failed: retryFailed,
-      failedIds: retryFailed > 0 ? ['retry_pending'] : [],
+      failedIds: stillFailedIds,
       isCompleted: retryFailed == 0,
       lastSyncAt: DateTime.now(),
     );

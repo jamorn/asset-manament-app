@@ -28,7 +28,7 @@ class AssetMapper {  static const Map<String, String> _assetClassMap = {
   };
 
   static String getShortClassName(String rawClass) {
-    return _assetClassMap[rawClass] ?? rawClass;
+    return _assetClassMap[rawClass] ?? 'Unknown ($rawClass)';
   }
 
   static DateTime? parseTimestamp(dynamic value) {

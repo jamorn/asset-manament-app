@@ -120,26 +120,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Padding(
               padding:
                   const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12),
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                icon: _isBulkAccepting
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.check_circle_outline, size: 16),
-                label: Text(
-                  _isBulkAccepting
-                      ? '⏳ $_bulkProgress/$_bulkTotal'
-                      : remaining == 0
-                          ? '✅ Done'
-                          : '✅ Accept All',
-                ),
-                onPressed: (_isBulkAccepting || remaining == 0)
-                    ? null
-                    : () => _handleBulkAccept(context, assetProv, remaining),
-              ),
+              child: Builder(builder: (context) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                return ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: remaining == 0
+                        ? (isDark ? Colors.green.shade700 : Colors.green)
+                        : Colors.teal,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: isDark
+                        ? Colors.green.shade800
+                        : Colors.green.shade100,
+                    disabledForegroundColor: isDark
+                        ? Colors.green.shade300
+                        : Colors.green.shade700,
+                  ),
+                  icon: _isBulkAccepting
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.check_circle_outline, size: 16),
+                  label: Text(
+                    _isBulkAccepting
+                        ? '⏳ $_bulkProgress/$_bulkTotal'
+                        : remaining == 0
+                            ? '✅ Done'
+                            : '✅ Accept All',
+                  ),
+                  onPressed: (_isBulkAccepting || remaining == 0)
+                      ? null
+                      : () => _handleBulkAccept(context, assetProv, remaining),
+                );
+              }),
             ),
 
           IconButton(
@@ -439,7 +453,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _bulkProgress = 0;
     });
 
-    try {
+        try {
       final needAccept = provider.assets
           .where((a) => !provider.auditedAssetNos.contains(a.assetNo))
           .toList();
@@ -447,6 +461,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       const int batchSize = 500;
       int successCount = 0;
+      int failCount = 0;
 
       for (int i = 0; i < needAccept.length; i += batchSize) {
         final chunk = needAccept.skip(i).take(batchSize).toList();
@@ -469,12 +484,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'auditedBy': 'system',
             'remarks': 'Auto-accepted via Dashboard',
           });
-          successCount++;
         }
 
-        await batch.commit();
+        try {
+          await batch.commit();
+          successCount += chunk.length;
+        } catch (e) {
+          failCount += chunk.length;
+          debugPrint('❌ Batch $i failed: $e');
+        }
+
         setState(() {
-          _bulkProgress = successCount;
+          _bulkProgress = successCount + failCount;
         });
       }
 
@@ -485,14 +506,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                '🎉 ยอมรับทั้งหมด (${provider.auditYear}) สำเร็จ $successCount รายการ!'),
+              failCount > 0
+                  ? '🎉 สำเร็จ $successCount รายการ, ล้มเหลว $failCount รายการ'
+                  : '🎉 ยอมรับทั้งหมด (${provider.auditYear}) สำเร็จ $successCount รายการ!',
+            ),
           ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ เกิดข้อผิดพลาด: ${e.toString()}')),
         );
       }
     } finally {

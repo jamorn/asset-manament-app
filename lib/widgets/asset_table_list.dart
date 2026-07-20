@@ -123,28 +123,24 @@ class AssetTableList extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
 
-                      // Badges
+                      // Badges — theme-aware
                       Wrap(
                         spacing: 4,
                         runSpacing: 4,
                         children: [
                           _buildBadge(
+                            context,
                             text: asset.environmentDisplay,
-                            bgColor: asset.environment == Environment.outdoor
-                                ? Colors.orange.shade50
-                                : Colors.blue.shade50,
-                            textColor: asset.environment == Environment.outdoor
-                                ? Colors.orange.shade700
-                                : Colors.blue.shade700,
+                            color: asset.environment == Environment.outdoor
+                                ? Colors.orange
+                                : Colors.blue,
                           ),
                           _buildBadge(
+                            context,
                             text: asset.mobilityDisplay,
-                            bgColor: asset.mobility == Mobility.fixed
-                                ? Colors.purple.shade50
-                                : Colors.teal.shade50,
-                            textColor: asset.mobility == Mobility.fixed
-                                ? Colors.purple.shade700
-                                : Colors.teal.shade700,
+                            color: asset.mobility == Mobility.fixed
+                                ? Colors.purple
+                                : Colors.teal,
                           ),
                         ],
                       ),
@@ -205,25 +201,26 @@ class AssetTableList extends StatelessWidget {
     );
   }
 
-  Widget _buildBadge({
+  Widget _buildBadge(BuildContext context, {
     required String text,
-    required Color bgColor,
-    required Color textColor,
+    required Color color,
   }) {
     if (text.isEmpty) return const SizedBox.shrink();
-    
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: isDark ? color.withValues(alpha: 0.25) : color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         text,
         style: TextStyle(
           fontSize: 9,
-          color: textColor,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
+          color: isDark ? Colors.white : color.withValues(alpha: 1.0),
         ),
       ),
     );

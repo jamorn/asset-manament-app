@@ -1,8 +1,8 @@
 // lib/models/audit_history.dart
-import 'package:equatable/equatable.dart';
+import 'package:collection/collection.dart';
 
 /// AuditHistory: บันทึกการเปลี่ยนแปลงของ Asset แต่ละครั้ง
-class AuditHistory extends Equatable {
+class AuditHistory {
   final String action;          // 'UPDATE', 'CREATE', 'AUDIT'
   final String performedBy;     // อีเมลผู้ทำ
   final DateTime timestamp;     // เวลาที่ทำ
@@ -39,12 +39,22 @@ class AuditHistory extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-    action,
-    performedBy,
-    timestamp,
-    changes,
-  ];
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! AuditHistory) return false;
+    return action == other.action &&
+        performedBy == other.performedBy &&
+        timestamp == other.timestamp &&
+        const DeepCollectionEquality().equals(changes, other.changes);
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        action,
+        performedBy,
+        timestamp,
+        const DeepCollectionEquality().hash(changes),
+      );
 
   @override
   String toString() {

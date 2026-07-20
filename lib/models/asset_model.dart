@@ -1,5 +1,6 @@
 // lib/models/asset_model.dart
 import 'package:equatable/equatable.dart';
+import 'package:collection/collection.dart';
 import '../mappers/asset_mapper.dart';
 import 'enums.dart';
 import 'audit_history.dart';  // ✅ เพิ่ม
@@ -106,8 +107,57 @@ class AssetModel extends Equatable {
     remarks,
     updatedAt,
     updatedBy,
-    history,  // ✅ เปลี่ยน
   ];
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! AssetModel) return false;
+    return assetNo == other.assetNo &&
+        description == other.description &&
+        assetClass == other.assetClass &&
+        assetClassName == other.assetClassName &&
+        capDate == other.capDate &&
+        assetOwner == other.assetOwner &&
+        costCenter == other.costCenter &&
+        costCenterName == other.costCenterName &&
+        mainLocation == other.mainLocation &&
+        lastLocationName == other.lastLocationName &&
+        environment == other.environment &&
+        mobility == other.mobility &&
+        status == other.status &&
+        currentStatus == other.currentStatus &&
+        lastImageUrl == other.lastImageUrl &&
+        lastCondition == other.lastCondition &&
+        remarks == other.remarks &&
+        updatedAt == other.updatedAt &&
+        updatedBy == other.updatedBy &&
+        const ListEquality().equals(history, other.history);
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+        assetNo,
+        description,
+        assetClass,
+        assetClassName,
+        capDate,
+        assetOwner,
+        costCenter,
+        costCenterName,
+        mainLocation,
+        lastLocationName,
+        environment,
+        mobility,
+        status,
+        currentStatus,
+        lastImageUrl,
+        lastCondition,
+        remarks,
+        updatedAt,
+        updatedBy,
+        const ListEquality().hash(history),
+      ]);
 
   @override
   String toString() {

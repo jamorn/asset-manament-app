@@ -30,13 +30,20 @@ void _handleFlutterError(FlutterErrorDetails details) {
   debugPrint('📍 Stack: ${details.stack}');
 }
 
-// ✅ Connectivity Listener
+// ✅ Connectivity Listener (พร้อม guard ป้องกัน sync ซ้ำซ้อน)
+bool _isSyncing = false;
+
 void _startConnectivityListener() {
-  Connectivity().onConnectivityChanged.listen((result) {
-    if (!result.contains(ConnectivityResult.none)) {
-      debugPrint('📶 Internet connected → Auto Sync started');
-      final syncService = OfflineSyncService();
-      syncService.syncPendingAudits(showProgress: true);
+  Connectivity().onConnectivityChanged.listen((result) async {
+    if (!result.contains(ConnectivityResult.none) && !_isSyncing) {
+      _isSyncing = true;
+      try {
+        debugPrint('📶 Internet connected → Auto Sync started');
+        final syncService = OfflineSyncService();
+        await syncService.syncPendingAudits(showProgress: true);
+      } finally {
+        _isSyncing = false;
+      }
     }
   });
 }

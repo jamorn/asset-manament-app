@@ -18,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 2; // ✅ เริ่มที่ Dashboard (index 2) เพื่อรอโหลด Firebase
+  bool _redirected = false; // ✅ guard ป้องกัน infinite loop
 
   final List<Widget> _pages = [];
 
@@ -101,10 +102,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // ถ้าอยู่ใน tab private แต่ยังไม่มีสิทธิ์ → ดึงไป tab Search
-    if (needsLogin && (_currentIndex == 0 || _currentIndex == 3)) {
-      // ใช้ postFrameCallback เพื่อไม่ให้ setState ใน build
+    if (needsLogin && (_currentIndex == 0 || _currentIndex == 3) && !_redirected) {
+      _redirected = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _currentIndex = 1); // ไป Search (public)
+        if (mounted) {
+          setState(() => _currentIndex = 1); // ไป Search (public)
+          Future.delayed(Duration.zero, () => _redirected = false);
+        }
       });
     }
 

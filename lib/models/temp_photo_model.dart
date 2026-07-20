@@ -70,8 +70,12 @@ class TempPhoto extends Equatable {
     };
   }
 
-  factory TempPhoto.fromJson(Map<String, dynamic> json) {
-    return TempPhoto.fromMap(json, json['tempId']?.toString() ?? '');
+    factory TempPhoto.fromJson(Map<String, dynamic> json) {
+    final id = json['tempId']?.toString() ?? '';
+    if (id.isEmpty) {
+      throw ArgumentError('tempId is required in JSON');
+    }
+    return TempPhoto.fromMap(json, id);
   }
 
   @override

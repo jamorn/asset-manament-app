@@ -18,7 +18,7 @@ class DefaultValues {
   static const int currentStatus = 0;
   
   // ===== Audit Defaults =====
-  static const String auditYear = '2024';
+  static String get auditYear => DateTime.now().year.toString();
   static const String auditor = 'unknown';
   
   // ===== Temp Photo Defaults =====

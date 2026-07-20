@@ -43,6 +43,17 @@ class AssetProvider with ChangeNotifier {
     _init();
   }
 
+  /// คำนวณ uid สำหรับ cache key — sort + hash ป้องกัน key collision
+  String _computeUid() {
+    if (_userRole == 'owner') return 'owner';
+    final costCenters = (_allowedCostCenters ?? [])
+        .where((cc) => cc.isNotEmpty)
+        .toList();
+    if (costCenters.isEmpty) return 'empty';
+    final sorted = List<String>.from(costCenters)..sort();
+    return sorted.join('|').hashCode.toRadixString(16);
+  }
+
   void updateRbacContext(String? role, List<String>? allowedCostCenters) {
     _userRole = role;
     _allowedCostCenters = allowedCostCenters;
@@ -70,14 +81,7 @@ class AssetProvider with ChangeNotifier {
   try {
     final prefs = await SharedPreferences.getInstance();
     
-    // ✅ คำนวณ uid เหมือนกับใน fetchAssetsFromServer
-    final List<String> costCenters = (_allowedCostCenters ?? [])
-        .where((cc) => cc.isNotEmpty)
-        .toList();
-    
-    final uid = _userRole == 'owner'
-        ? 'owner'
-        : (costCenters.isNotEmpty ? costCenters.join('_') : 'empty');
+    final uid = _computeUid();
     final cacheKey = '${_cacheKey}_$uid';
     final cacheTsKey = '${_cacheTimestampKey}_$uid';
 
@@ -164,9 +168,7 @@ class AssetProvider with ChangeNotifier {
       _loading = false;
 
       // ✅ แยก Cache ตามสิทธิ์ (กันข้อมูลปน)
-      final uid = _userRole == 'owner'
-          ? 'owner'
-          : (costCenters.isNotEmpty ? costCenters.join('_') : 'empty');
+      final uid = _computeUid();
       final cacheKey = '${_cacheKey}_$uid';
       final cacheTsKey = '${_cacheTimestampKey}_$uid';
 
@@ -270,9 +272,7 @@ class AssetProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
 
     // ✅ ลบ Cache ของสิทธิ์ปัจจุบันเท่านั้น
-    final uid = _userRole == 'owner'
-        ? 'owner'
-        : (_allowedCostCenters?.join('_') ?? 'empty');
+    final uid = _computeUid();
     final cacheKey = '${_cacheKey}_$uid';
     final cacheTsKey = '${_cacheTimestampKey}_$uid';
 
@@ -311,15 +311,7 @@ class AssetProvider with ChangeNotifier {
   Future<void> _syncCache() async {
   final prefs = await SharedPreferences.getInstance();
   
-  // ✅ คำนวณ uid เหมือนเดิม
-  final List<String> costCenters = (_allowedCostCenters ?? [])
-      .where((cc) => cc.isNotEmpty)
-      .cast<String>()
-      .toList();
-  
-  final uid = _userRole == 'owner'
-      ? 'owner'
-      : (costCenters.isNotEmpty ? costCenters.join('_') : 'empty');
+  final uid = _computeUid();
   final cacheKey = '${_cacheKey}_$uid';
   
   final jsonStr = jsonEncode(_assets.map((e) => e.toJson()).toList());

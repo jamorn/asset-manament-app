@@ -205,17 +205,16 @@ class TempPhotoProvider with ChangeNotifier {
       } else {
         photoUrl = existing.photoUrl;
       }
-      await _db.collection(_collectionPath).doc(tempId).set({
+      await _db.collection(_collectionPath).doc(tempId).update({
         'referenceAssetNo': referenceAssetNo,
         'description': description,
         'photoUrl': photoUrl,
         'location': location,
-        'capturedAt': FieldValue.serverTimestamp(),
         'assetClass': assetClass,
         'assetClassName': assetClassName,
         'costCenter': costCenter,
         'costCenterName': costCenterName,
-      }, SetOptions(merge: true));
+      });
       _tempPhotos = _tempPhotos
           .map((t) => t.tempId == tempId
               ? TempPhoto(

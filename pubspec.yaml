@@ -9,7 +9,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
   # ===== State Management =====
   provider: ^6.1.5+1               # state management (InheritedWidget wrapper)
 
@@ -30,6 +29,8 @@ dependencies:
   intl: ^0.20.2                    # รูปแบบวันที่/ตัวเลข (ภาษาไทย)
   # uuid: ^4.5.3                   # (unused) ใช้ TempPhotoProvider สร้าง ID เอง
   equatable: ^2.0.5                # value equality (props) สำหรับ Model classes
+  collection: ^1.19.1              # DeepCollectionEquality สำหรับ Map/List equality
+  cached_network_image: ^3.4.1   # ✅ เพิ่ม — image caching
 
   # ===== Networking =====
   connectivity_plus: ^6.0.0        # ตรวจสอบสถานะอินเทอร์เน็ต (offline sync)

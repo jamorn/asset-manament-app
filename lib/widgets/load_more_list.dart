@@ -38,11 +38,16 @@ class _LoadMoreListState extends State<LoadMoreList> {
   @override
   void didUpdateWidget(covariant LoadMoreList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.assets != widget.assets) {
-      setState(() {
-        _visibleCount = widget.pageSize;
-      });
+    // เช็คว่า list เปลี่ยนจริง (theme rebuild จะไม่ reset)
+    final listChanged = oldWidget.assets.length != widget.assets.length ||
+        (widget.assets.isNotEmpty && oldWidget.assets.isNotEmpty &&
+         oldWidget.assets[0].assetNo != widget.assets[0].assetNo);
+
+    if (listChanged) {
+      // filter เปลี่ยน → reset ไปบนสุด
+      _visibleCount = widget.pageSize;
     }
+    // ถ้า list ไม่เปลี่ยน (เช่น theme toggle) → ไม่ทำอะไร รักษา state ไว้
   }
 
   @override
@@ -66,7 +71,7 @@ class _LoadMoreListState extends State<LoadMoreList> {
           child: AssetTableList(
             assets: visibleAssets,
             selectedAssetNo: widget.selectedAssetNo,
-            onSelect: widget.onSelect,  // ✅ ส่ง AssetModel
+            onSelect: widget.onSelect,
             onImageClick: widget.onImageClick,
             auditedSet: widget.auditedSet,
           ),

@@ -118,7 +118,7 @@ class SyncStatusAdapter extends TypeAdapter<SyncStatus> {
       progress: reader.readDouble(),
       lastSyncAt: DateTime.parse(reader.readString()),
       isCompleted: reader.readBool(),
-      failedIds: reader.readList().cast<String>(),
+      failedIds: reader.readList().whereType<String>().toList(),
     );
   }
 
