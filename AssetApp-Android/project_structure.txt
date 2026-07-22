@@ -1,0 +1,22 @@
+﻿app/src/main/java/com/plbg/assetapp/
+├── domain/                    # Business Logic (Pure Kotlin)
+│   ├── model/                 # Data classes
+│   ├── repository/            # Interfaces
+│   └── usecase/               # Use cases
+├── data/                      # Data Layer
+│   ├── local/                 # Room DB + DataStore
+│   ├── remote/                # Firebase wrappers
+│   ├── mapper/                # Firestore ↔ Domain
+│   └── repository/            # Implementations
+├── di/                        # Hilt modules
+├── ui/                        # Presentation Layer
+│   ├── theme/                 # Material3 theme
+│   ├── common/                # Shared components
+│   ├── survey/                # Survey screen + VM
+│   ├── search/                # Search screen + VM
+│   ├── dashboard/             # Dashboard screen + VM
+│   ├── audit/                 # Audit screen + VM
+│   ├── tempphoto/             # TempPhoto screen + VM
+│   └── auth/                  # Auth screen + VM
+├── worker/                    # WorkManager (offline sync)
+└── MainActivity.kt
