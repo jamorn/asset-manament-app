@@ -199,3 +199,34 @@ cp android/gradle/wrapper/gradle-wrapper.jar AssetApp-Android/gradle/wrapper/
 
 cd AssetApp-Android
 ./gradlew assembleDebug
+
+# ดึงเฉพาะ AssetApp-Android/
+
+cd /path/to/asset-manament-app
+
+# ดึงเฉพาะ folder นี้
+
+git fetch origin main
+git checkout origin/main -- AssetApp-Android/
+
+# หลังจากได้โฟลเดอร์มาแล้ว:
+
+# 1. สร้าง gradle-wrapper.jar
+
+flutter build apk --debug
+cp android/gradle/wrapper/gradle-wrapper.jar AssetApp-Android/gradle/wrapper/
+
+# 2. แก้ local.properties
+
+# เปิด AssetApp-Android/local.properties → แก้ sdk.dir ให้เป็นของ Mac
+
+# 3. แก้ YOUR_WEB_CLIENT_ID
+
+# เปิด AuthRepositoryImpl.kt → ใส่ Web Client ID จริง
+
+# 4. Build!
+
+cd AssetApp-Android
+./gradlew assembleDebug
+
+# เสร็จแล้วก็ได้ app/build/outputs/apk/debug/app-debug.apk ไปติดตั้งเครื่อง Android ได้เลยครับ!
